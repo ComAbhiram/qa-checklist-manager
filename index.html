@@ -310,6 +310,15 @@
     .test-case-item:last-child {
       border-bottom: none;
     }
+    /* Fix for Login Modal Display */
+    #login-modal.modal {
+      display: none !important; /* Ensure it's hidden by default */
+    }
+    #login-modal.modal[style*="display: flex"] {
+      display: flex !important; /* Ensure it shows when display is set */
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
   </style>
 </head>
 <body>
@@ -1098,7 +1107,9 @@
         const loginModalClose = loginModal.querySelector('.modal-close');
 
         function openLoginModal() {
-          loginModal.style.display = 'flex';
+          console.log('Opening login modal'); // Debug
+          loginModal.style.display = 'flex !important';
+          console.log('Modal display style:', loginModal.style.display); // Debug
         }
 
         function closeLoginModal() {
@@ -1451,6 +1462,7 @@
 
         // Auth (Login/Logout) button
         authButton.addEventListener('click', () => {
+          console.log('Auth button clicked'); // Debug
           if (authButton.textContent === 'Logout') {
             auth.signOut().then(() => {
               currentUser = null;

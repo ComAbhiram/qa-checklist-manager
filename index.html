@@ -2,11 +2,11 @@
 <html dir="ltr" lang="en">
 <head>
   <meta charset="utf-8">
-  <title>QA Checklist Manager - MacGlobal</title>
+  <title>QA Checklist Manager - ISS QA</title>
   <meta name="app-name" content="qa_checklist_manager">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta property="og:title" content="QA Checklist Manager - MacGlobal">
+  <meta property="og:title" content="QA Checklist Manager - ISS QA">
   <meta property="og:type" content="website">
 
   <!-- Tailwind CSS CDN -->
@@ -17,6 +17,11 @@
 
   <!-- Chart.js CDN for Graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDK (Updated to 10.12.2) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
 
   <!-- Favicons -->
   <link rel="shortcut icon" href="_assets/images/favicon.ico">
@@ -317,7 +322,7 @@
   <header class="bg-white shadow-sm sticky top-0 z-50">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
       <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">MacGlobal QA</h1>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">ISS QA</h1>
         <div class="space-x-6">
           <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Home</a>
           <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">About</a>
@@ -335,7 +340,7 @@
         Elevate Your QA Workflow
       </h2>
       <p class="mt-6 text-xl sm:text-2xl max-w-3xl mx-auto slide-up">
-        Empower your team with MacGlobal's QA Checklist Manager. Create, manage, and optimize quality assurance processes with a sleek, intuitive platform designed for excellence.
+        Empower your team with ISS QA's QA Checklist Manager. Create, manage, and optimize quality assurance processes with a sleek, intuitive platform designed for excellence.
       </p>
       <a href="#" class="mt-8 inline-block bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-blue-50 transition slide-up">Try It Now</a>
     </div>
@@ -345,7 +350,7 @@
   <main class="content-section">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
       <div class="glass-card fade-in">
-        <h3 class="text-2xl font-semibold text-gray-900 mb-4">Why MacGlobal QA?</h3>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4">Why ISS QA?</h3>
         <ul class="space-y-3 text-gray-600">
           <li class="flex items-center">
             <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -473,19 +478,12 @@
         <span class="modal-close">×</span>
         <h3 class="text-xl font-semibold mb-4">Login to QA Checklist Manager</h3>
         <div class="mb-4">
-          <label for="username" class="block text-gray-700 mb-2">Username</label>
-          <input type="text" id="username" class="w-full p-2 border rounded" placeholder="Enter username">
+          <label for="email" class="block text-gray-700 mb-2">Email</label>
+          <input type="email" id="email" class="w-full p-2 border rounded" placeholder="e.g., admin@example.com">
         </div>
         <div class="mb-4">
           <label for="password" class="block text-gray-700 mb-2">Password</label>
           <input type="password" id="password" class="w-full p-2 border rounded" placeholder="Enter password">
-        </div>
-        <div class="mb-4">
-          <label for="role" class="block text-gray-700 mb-2">Role</label>
-          <select id="role" class="w-full p-2 border rounded">
-            <option value="admin">Admin</option>
-            <option value="user">User</option>
-          </select>
         </div>
         <button id="login-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
       </div>
@@ -542,7 +540,7 @@
   <!-- Footer -->
   <footer id="footer" class="mt-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <p class="text-gray-300">© 2025 MacGlobal QA Checklist Manager. All rights reserved.</p>
+      <p class="text-gray-300">© 2025 ISS QA Checklist Manager. All rights reserved.</p>
       <div class="mt-4 space-x-6">
         <a href="#" class="text-gray-300 hover:text-white transition">Privacy Policy</a>
         <a href="#" class="text-gray-300 hover:text-white transition">Terms of Service</a>
@@ -580,796 +578,974 @@
       const footerContainer = document.getElementById('footer');
       if (footerContainer) window.canva_installFooter(footerContainer);
 
-      // Initialize local storage for test groups, test cases, and reports if not already set
-      if (!localStorage.getItem('testGroups')) {
-        const initialGroups = [
-          { id: 1, name: 'UI Testing', description: 'UI Testing for user interface validation' },
-          { id: 2, name: 'Functionality Testing', description: 'Functionality Testing for core features' }
-        ];
-        localStorage.setItem('testGroups', JSON.stringify(initialGroups));
-      }
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDCkO5Mbnn5KLqaO84wuswsqeEN3bW7_s0",
+        authDomain: "qa-checklist-manager-c9e73.firebaseapp.com",
+        projectId: "qa-checklist-manager-c9e73",
+        storageBucket: "qa-checklist-manager-c9e73.firebasestorage.app",
+        messagingSenderId: "798419160073",
+        appId: "1:798419160073:web:595d5842c8eb6e9876fcd8"
+      };
 
-      if (!localStorage.getItem('testCases')) {
-        const initialTestCases = [
-          { id: 1, groupId: 1, name: 'Check button styling', steps: ['Verify button color is blue', 'Check hover effect', 'Ensure text alignment'] },
-          { id: 2, groupId: 1, name: 'Verify form validation', steps: ['Submit empty form', 'Check error messages', 'Submit valid data'] },
-          { id: 3, groupId: 2, name: 'Test login functionality', steps: ['Enter invalid credentials', 'Enter valid credentials', 'Verify redirect'] }
-        ];
-        localStorage.setItem('testCases', JSON.stringify(initialTestCases));
-      }
-
-      if (!localStorage.getItem('reports')) {
-        localStorage.setItem('reports', JSON.stringify([]));
-      }
-
-      // Elements
-      const userInfo = document.getElementById('user-info');
-      const authButton = document.getElementById('auth-button');
-      const adminDashboard = document.getElementById('admin-dashboard');
-      const userView = document.getElementById('user-view');
-      const testCasesView = document.getElementById('test-cases-view');
-      const viewReportsBtn = document.getElementById('view-reports-btn');
-
-      // Check initial login state
-      let currentUser = null;
-      let currentRole = null;
-      const session = JSON.parse(localStorage.getItem('userSession'));
-      if (session) {
-        currentUser = session.username;
-        currentRole = session.role;
-        userInfo.textContent = `User: ${currentUser} (${currentRole})`;
-        authButton.textContent = 'Logout';
-        authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-        authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-        updateViewBasedOnRole();
-      }
-
-      function updateViewBasedOnRole() {
-        if (currentRole === 'admin') {
-          adminDashboard.classList.remove('hidden');
-          viewReportsBtn.classList.remove('hidden'); // Show for admins
-          userView.classList.add('hidden');
-          testCasesView.classList.add('hidden');
-        } else if (currentRole === 'user') {
-          adminDashboard.classList.add('hidden'); // Hide admin dashboard entirely for users
-          userView.classList.remove('hidden');
-          testCasesView.classList.add('hidden');
-          loadUserTestGroups();
-        } else {
-          adminDashboard.classList.add('hidden');
-          userView.classList.add('hidden');
-          testCasesView.classList.add('hidden');
-        }
-      }
-
-      // Load test groups for admin
-      function loadTestGroups() {
-        const testGroupsList = document.getElementById('test-groups-list');
-        if (!testGroupsList) return;
-        testGroupsList.innerHTML = '';
-        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
-        if (groups.length === 0) {
-          testGroupsList.innerHTML = '<p>No test groups available.</p>';
+      // Wait for Firebase to load
+      function initializeFirebase() {
+        if (typeof firebase === 'undefined') {
+          console.error("Firebase SDK not loaded yet. Retrying in 500ms...");
+          setTimeout(initializeFirebase, 500);
           return;
         }
-        groups.forEach(group => {
-          const groupCard = document.createElement('div');
-          groupCard.className = 'test-group-card';
-          groupCard.setAttribute('data-id', group.id);
-          groupCard.innerHTML = `
-            <div class="title">${group.name}</div>
-            <div class="description">${group.description}</div>
-            <div class="actions">
-              <button class="edit-group-btn text-blue-600 hover:text-blue-800">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-              </button>
-              <button class="delete-group-btn text-red-600 hover:text-red-800">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
-              </button>
-            </div>
-          `;
-          testGroupsList.appendChild(groupCard);
 
-          // Attach event listeners for edit and delete buttons
-          const editBtn = groupCard.querySelector('.edit-group-btn');
-          const deleteBtn = groupCard.querySelector('.delete-group-btn');
+        // Initialize Firebase
+        try {
+          firebase.initializeApp(firebaseConfig);
+          console.log("Firebase initialized successfully");
+        } catch (error) {
+          console.error("Firebase initialization failed:", error);
+          alert("Failed to initialize Firebase: " + error.message);
+        }
 
-          editBtn.addEventListener('click', () => {
-            if (currentRole !== 'admin') {
-              alert('You must be logged in as admin to perform this action.');
+        // Initialize Firestore and Auth
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Elements
+        const userInfo = document.getElementById('user-info');
+        const authButton = document.getElementById('auth-button');
+        const adminDashboard = document.getElementById('admin-dashboard');
+        const userView = document.getElementById('user-view');
+        const testCasesView = document.getElementById('test-cases-view');
+        const viewReportsBtn = document.getElementById('view-reports-btn');
+
+        // Check initial login state
+        let currentUser = null;
+        let currentRole = null;
+
+        function updateViewBasedOnRole() {
+          console.log("Updating view for role:", currentRole);
+          if (currentRole === 'admin') {
+            adminDashboard.classList.remove('hidden');
+            viewReportsBtn.classList.remove('hidden');
+            userView.classList.add('hidden');
+            testCasesView.classList.add('hidden');
+          } else if (currentRole === 'user') {
+            adminDashboard.classList.add('hidden');
+            userView.classList.remove('hidden');
+            testCasesView.classList.add('hidden');
+            loadUserTestGroups();
+          } else {
+            adminDashboard.classList.add('hidden');
+            userView.classList.add('hidden');
+            testCasesView.classList.add('hidden');
+          }
+        }
+
+        // Load test groups for admin
+        function loadTestGroups() {
+          const testGroupsList = document.getElementById('test-groups-list');
+          if (!testGroupsList) return;
+          testGroupsList.innerHTML = '';
+          db.collection('testGroups').get().then((snapshot) => {
+            const groups = [];
+            snapshot.forEach(doc => groups.push(doc.data()));
+            if (groups.length === 0) {
+              testGroupsList.innerHTML = '<p>No test groups available.</p>';
               return;
             }
-            const groupId = groupCard.getAttribute('data-id');
-            const groups = JSON.parse(localStorage.getItem('testGroups'));
-            const group = groups.find(g => g.id == groupId);
-            openGroupModal('Edit Test Group', group);
+            groups.forEach(group => {
+              const groupCard = document.createElement('div');
+              groupCard.className = 'test-group-card';
+              groupCard.setAttribute('data-id', group.id);
+              groupCard.innerHTML = `
+                <div class="title">${group.name}</div>
+                <div class="description">${group.description}</div>
+                <div class="actions">
+                  <button class="edit-group-btn text-blue-600 hover:text-blue-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  </button>
+                  <button class="delete-group-btn text-red-600 hover:text-red-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
+                  </button>
+                </div>
+              `;
+              testGroupsList.appendChild(groupCard);
+
+              const editBtn = groupCard.querySelector('.edit-group-btn');
+              const deleteBtn = groupCard.querySelector('.delete-group-btn');
+
+              editBtn.addEventListener('click', () => {
+                if (currentRole !== 'admin') {
+                  alert('You must be logged in as admin to perform this action.');
+                  return;
+                }
+                const groupId = groupCard.getAttribute('data-id');
+                db.collection('testGroups').doc(groupId).get().then(doc => {
+                  const group = doc.data();
+                  openGroupModal('Edit Test Group', group);
+                });
+              });
+
+              deleteBtn.addEventListener('click', () => {
+                if (currentRole !== 'admin') {
+                  alert('You must be logged in as admin to perform this action.');
+                  return;
+                }
+                const groupId = groupCard.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this test group?')) {
+                  db.collection('testGroups').doc(groupId).delete().then(() => {
+                    db.collection('testCases').where('groupId', '==', parseInt(groupId)).get().then(snapshot => {
+                      const batch = db.batch();
+                      snapshot.forEach(doc => batch.delete(doc.ref));
+                      batch.commit().then(() => loadTestGroups());
+                    });
+                  });
+                }
+              });
+            });
+          }).catch(error => {
+            console.error('Error loading test groups:', error);
+            testGroupsList.innerHTML = '<p>Error loading test groups.</p>';
           });
+        }
 
-          deleteBtn.addEventListener('click', () => {
-            if (currentRole !== 'admin') {
-              alert('You must be logged in as admin to perform this action.');
+        // Load test cases for admin
+        function loadTestCases() {
+          const testCasesList = document.getElementById('test-cases-list');
+          if (!testCasesList) return;
+          testCasesList.innerHTML = '';
+          db.collection('testGroups').get().then(groupSnapshot => {
+            const groups = [];
+            groupSnapshot.forEach(doc => groups.push(doc.data()));
+            db.collection('testCases').get().then(snapshot => {
+              const testCases = [];
+              snapshot.forEach(doc => testCases.push(doc.data()));
+              if (testCases.length === 0) {
+                testCasesList.innerHTML = '<p>No test cases available.</p>';
+                return;
+              }
+              testCases.forEach(tc => {
+                const group = groups.find(g => g.id == tc.groupId);
+                const tcCard = document.createElement('div');
+                tcCard.className = 'test-case-card';
+                tcCard.setAttribute('data-id', tc.id);
+                let stepsHtml = '';
+                if (tc.steps && tc.steps.length > 0) {
+                  stepsHtml = '<div class="test-steps">';
+                  tc.steps.forEach(step => {
+                    stepsHtml += `<div class="test-step">${step}</div>`;
+                  });
+                  stepsHtml += '</div>';
+                }
+                tcCard.innerHTML = `
+                  <div class="test-case-header">
+                    <div class="test-case-title">${tc.name}</div>
+                    <div class="actions">
+                      <button class="delete-test-case-btn text-red-600 hover:text-red-800">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="description">Group: ${group ? group.name : 'Unknown'}</div>
+                  ${stepsHtml}
+                `;
+                testCasesList.appendChild(tcCard);
+
+                const deleteBtn = tcCard.querySelector('.delete-test-case-btn');
+                deleteBtn.addEventListener('click', () => {
+                  if (currentRole !== 'admin') {
+                    alert('You must be logged in as admin to perform this action.');
+                    return;
+                  }
+                  const tcId = tcCard.getAttribute('data-id');
+                  if (confirm('Are you sure you want to delete this test case?')) {
+                    db.collection('testCases').doc(tcId).delete().then(() => loadTestCases());
+                  }
+                });
+              });
+            }).catch(error => {
+              console.error('Error loading test cases:', error);
+              testCasesList.innerHTML = '<p>Error loading test cases.</p>';
+            });
+          }).catch(error => {
+            console.error('Error loading groups for test cases:', error);
+            testCasesList.innerHTML = '<p>Error loading test cases.</p>';
+          });
+        }
+
+        // Load reports for admin
+        function loadReports() {
+          const reportsList = document.getElementById('reports-list');
+          if (!reportsList) return;
+          reportsList.innerHTML = '';
+          db.collection('reports').orderBy('timestamp', 'desc').get().then(snapshot => {
+            const reports = [];
+            snapshot.forEach(doc => {
+              if (doc.id !== 'init') reports.push({ id: doc.id, ...doc.data() });
+            });
+            if (reports.length === 0) {
+              reportsList.innerHTML = '<p>No reports available.</p>';
               return;
             }
-            const groupId = groupCard.getAttribute('data-id');
-            if (confirm('Are you sure you want to delete this test group?')) {
-              let groups = JSON.parse(localStorage.getItem('testGroups'));
-              let testCases = JSON.parse(localStorage.getItem('testCases')) || [];
-              groups = groups.filter(g => g.id != groupId);
-              testCases = testCases.filter(tc => tc.groupId != groupId);
-              localStorage.setItem('testGroups', JSON.stringify(groups));
-              localStorage.setItem('testCases', JSON.stringify(testCases));
+            reports.forEach((report, index) => {
+              const reportCard = document.createElement('div');
+              reportCard.className = 'completion-box';
+              reportCard.setAttribute('data-index', index);
+              const canvasId = `report-chart-${index}`;
+              reportCard.innerHTML = `
+                <h4>Project: ${report.projectName}</h4>
+                <p>User: ${report.userName}</p>
+                <p>Group: ${report.groupName}</p>
+                <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
+                <div class="graph-container">
+                  <canvas id="${canvasId}"></canvas>
+                </div>
+              `;
+              reportsList.appendChild(reportCard);
+
+              const ctx = document.getElementById(canvasId).getContext('2d');
+              new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: ['Completed', 'Remaining'],
+                  datasets: [{
+                    label: 'Test Cases',
+                    data: [report.completedCount, report.totalCount - report.completedCount],
+                    backgroundColor: ['#10b981', '#e5e7eb'],
+                    borderColor: ['#10b981', '#e5e7eb'],
+                    borderWidth: 1
+                  }]
+                },
+                options: {
+                  indexAxis: 'y',
+                  scales: {
+                    x: {
+                      beginAtZero: true,
+                      max: report.totalCount
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      display: false
+                    }
+                  }
+                }
+              });
+
+              reportCard.addEventListener('click', () => {
+                openReportDetailsModal(report, index);
+              });
+            });
+          }).catch(error => {
+            console.error('Error loading reports:', error);
+            reportsList.innerHTML = '<p>Error loading reports.</p>';
+          });
+        }
+
+        // Open Report Details Modal
+        const reportDetailsModal = document.getElementById('report-details-modal');
+        const reportDetailsContent = document.getElementById('report-details-content');
+        const closeReportDetailsBtn = document.getElementById('close-report-details-btn');
+        const reportDetailsModalClose = reportDetailsModal.querySelector('.modal-close');
+
+        function openReportDetailsModal(report, index) {
+          reportDetailsContent.innerHTML = `
+            <h4>Project: ${report.projectName}</h4>
+            <p>User: ${report.userName}</p>
+            <p>Group: ${report.groupName}</p>
+            <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
+          `;
+
+          db.collection('testCases').where('groupId', '==', report.groupId).get().then(snapshot => {
+            const groupTestCases = [];
+            snapshot.forEach(doc => groupTestCases.push(doc.data()));
+            const passedTestCases = groupTestCases.filter(tc => report.completedTestCases.includes(tc.id));
+            const pendingTestCases = groupTestCases.filter(tc => !report.completedTestCases.includes(tc.id));
+
+            const passedSection = document.createElement('div');
+            passedSection.className = 'status-section';
+            passedSection.innerHTML = `<h5 class="status-passed">Passed Test Cases (${passedTestCases.length})</h5>`;
+            if (passedTestCases.length === 0) {
+              passedSection.innerHTML += '<p>No test cases passed.</p>';
+            } else {
+              passedTestCases.forEach(tc => {
+                const item = document.createElement('div');
+                item.className = 'test-case-item';
+                item.innerHTML = `<div>${tc.name}</div>`;
+                passedSection.appendChild(item);
+              });
+            }
+            reportDetailsContent.appendChild(passedSection);
+
+            const pendingSection = document.createElement('div');
+            pendingSection.className = 'status-section';
+            pendingSection.innerHTML = `<h5 class="status-pending">Pending Test Cases (${pendingTestCases.length})</h5>`;
+            if (pendingTestCases.length === 0) {
+              pendingSection.innerHTML += '<p>No test cases pending.</p>';
+            } else {
+              pendingTestCases.forEach(tc => {
+                const item = document.createElement('div');
+                item.className = 'test-case-item';
+                item.innerHTML = `<div>${tc.name}</div>`;
+                pendingSection.appendChild(item);
+              });
+            }
+            reportDetailsContent.appendChild(pendingSection);
+
+            reportDetailsModal.style.display = 'flex';
+          }).catch(error => {
+            console.error('Error loading test cases for report:', error);
+            reportDetailsContent.innerHTML += '<p>Error loading test case details.</p>';
+          });
+        }
+
+        function closeReportDetailsModal() {
+          reportDetailsModal.style.display = 'none';
+          reportDetailsContent.innerHTML = '';
+        }
+
+        closeReportDetailsBtn.addEventListener('click', closeReportDetailsModal);
+        reportDetailsModalClose.addEventListener('click', closeReportDetailsModal);
+        reportDetailsModal.addEventListener('click', (e) => {
+          if (e.target === reportDetailsModal) closeReportDetailsModal();
+        });
+
+        // Load test groups for user
+        function loadUserTestGroups() {
+          const userTestGroupsList = document.getElementById('user-test-groups-list');
+          if (!userTestGroupsList) return;
+          userTestGroupsList.innerHTML = '';
+          db.collection('testGroups').get().then(snapshot => {
+            const groups = [];
+            snapshot.forEach(doc => groups.push(doc.data()));
+            if (groups.length === 0) {
+              userTestGroupsList.innerHTML = '<p>No test groups available.</p>';
+              return;
+            }
+            groups.forEach(group => {
+              const groupCard = document.createElement('div');
+              groupCard.className = 'test-group-card';
+              groupCard.setAttribute('data-id', group.id);
+              groupCard.innerHTML = `<div class="title">${group.name}</div>`;
+              groupCard.addEventListener('click', () => {
+                currentGroupId = group.id;
+                currentGroupName = group.name;
+                openProjectDetailsModal();
+              });
+              userTestGroupsList.appendChild(groupCard);
+            });
+          }).catch(error => {
+            console.error('Error loading user test groups:', error);
+            userTestGroupsList.innerHTML = '<p>Error loading test groups.</p>';
+          });
+        }
+
+        // Group Modal functionality
+        const groupModal = document.getElementById('group-modal');
+        const groupModalTitle = document.getElementById('group-modal-title');
+        const groupNameInput = document.getElementById('group-name');
+        const groupDescriptionInput = document.getElementById('group-description');
+        const saveGroupBtn = document.getElementById('save-group-btn');
+        const groupModalClose = groupModal.querySelector('.modal-close');
+        let editingGroupId = null;
+
+        function openGroupModal(title, group = null) {
+          groupModalTitle.textContent = title;
+          groupNameInput.value = group ? group.name : '';
+          groupDescriptionInput.value = group ? group.description : '';
+          editingGroupId = group ? group.id : null;
+          groupModal.style.display = 'flex';
+        }
+
+        function closeGroupModal() {
+          groupModal.style.display = 'none';
+          groupNameInput.value = '';
+          groupDescriptionInput.value = '';
+          editingGroupId = null;
+        }
+
+        groupModalClose.addEventListener('click', closeGroupModal);
+        groupModal.addEventListener('click', (e) => {
+          if (e.target === groupModal) closeGroupModal();
+        });
+
+        saveGroupBtn.addEventListener('click', () => {
+          if (currentRole !== 'admin') {
+            alert('You must be logged in as admin to perform this action.');
+            return;
+          }
+          const name = groupNameInput.value.trim();
+          const description = groupDescriptionInput.value.trim();
+          if (!name || !description) {
+            alert('Please fill in all fields.');
+            return;
+          }
+
+          if (editingGroupId) {
+            db.collection('testGroups').doc(editingGroupId).update({
+              name,
+              description
+            }).then(() => {
               loadTestGroups();
-            }
+              loadUserTestGroups();
+              closeGroupModal();
+            }).catch(error => {
+              console.error('Error updating test group:', error);
+              alert('Error updating test group.');
+            });
+          } else {
+            db.collection('testGroups').get().then(snapshot => {
+              const groups = [];
+              snapshot.forEach(doc => groups.push(doc.data()));
+              const newGroup = {
+                id: groups.length ? Math.max(...groups.map(g => g.id)) + 1 : 1,
+                name,
+                description
+              };
+              db.collection('testGroups').doc(newGroup.id.toString()).set(newGroup).then(() => {
+                loadTestGroups();
+                loadUserTestGroups();
+                closeGroupModal();
+              }).catch(error => {
+                console.error('Error adding test group:', error);
+                alert('Error adding test group.');
+              });
+            }).catch(error => {
+              console.error('Error fetching test groups for new ID:', error);
+              alert('Error adding test group.');
+            });
+          }
+        });
+
+        // Test Case Modal functionality
+        const testCaseModal = document.getElementById('test-case-modal');
+        const testCaseGroupSelect = document.getElementById('test-case-group');
+        const testCaseNameInput = document.getElementById('test-case-name');
+        const testCaseStepsInput = document.getElementById('test-case-steps');
+        const saveTestCaseBtn = document.getElementById('save-test-case-btn');
+        const testCaseModalClose = testCaseModal.querySelector('.modal-close');
+
+        function openTestCaseModal() {
+          testCaseGroupSelect.innerHTML = '';
+          db.collection('testGroups').get().then(snapshot => {
+            const groups = [];
+            snapshot.forEach(doc => groups.push(doc.data()));
+            groups.forEach(group => {
+              const option = document.createElement('option');
+              option.value = group.id;
+              option.textContent = group.name;
+              testCaseGroupSelect.appendChild(option);
+            });
+          }).catch(error => {
+            console.error('Error loading groups for test case modal:', error);
+            testCaseGroupSelect.innerHTML = '<option value="">Error loading groups</option>';
+          });
+          testCaseNameInput.value = '';
+          testCaseStepsInput.value = '';
+          testCaseModal.style.display = 'flex';
+        }
+
+        function closeTestCaseModal() {
+          testCaseModal.style.display = 'none';
+          testCaseNameInput.value = '';
+          testCaseStepsInput.value = '';
+        }
+
+        testCaseModalClose.addEventListener('click', closeTestCaseModal);
+        testCaseModal.addEventListener('click', (e) => {
+          if (e.target === testCaseModal) closeTestCaseModal();
+        });
+
+        saveTestCaseBtn.addEventListener('click', () => {
+          if (currentRole !== 'admin') {
+            alert('You must be logged in as admin to perform this action.');
+            return;
+          }
+          const groupId = parseInt(testCaseGroupSelect.value);
+          const name = testCaseNameInput.value.trim();
+          const steps = testCaseStepsInput.value.trim().split('\n').filter(step => step.trim() !== '');
+          if (!groupId || !name || steps.length === 0) {
+            alert('Please fill in all fields, including at least one test step.');
+            return;
+          }
+
+          db.collection('testCases').get().then(snapshot => {
+            const testCases = [];
+            snapshot.forEach(doc => testCases.push(doc.data()));
+            const newTestCase = {
+              id: testCases.length ? Math.max(...testCases.map(tc => tc.id)) + 1 : 1,
+              groupId,
+              name,
+              steps
+            };
+            db.collection('testCases').doc(newTestCase.id.toString()).set(newTestCase).then(() => {
+              loadTestCases();
+              closeTestCaseModal();
+            }).catch(error => {
+              console.error('Error adding test case:', error);
+              alert('Error adding test case.');
+            });
+          }).catch(error => {
+            console.error('Error fetching test cases for new ID:', error);
+            alert('Error adding test case.');
           });
         });
-      }
 
-      // Load test cases for admin
-      function loadTestCases() {
-        const testCasesList = document.getElementById('test-cases-list');
-        if (!testCasesList) return;
-        testCasesList.innerHTML = '';
-        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
-        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
-        if (testCases.length === 0) {
-          testCasesList.innerHTML = '<p>No test cases available.</p>';
-          return;
+        // Login Modal functionality
+        const loginModal = document.getElementById('login-modal');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginSubmitBtn = document.getElementById('login-submit-btn');
+        const loginModalClose = loginModal.querySelector('.modal-close');
+
+        function openLoginModal() {
+          loginModal.style.display = 'flex';
         }
-        testCases.forEach(tc => {
-          const group = groups.find(g => g.id == tc.groupId);
-          const tcCard = document.createElement('div');
-          tcCard.className = 'test-case-card';
-          tcCard.setAttribute('data-id', tc.id);
-          let stepsHtml = '';
-          if (tc.steps && tc.steps.length > 0) {
-            stepsHtml = '<div class="test-steps">';
-            tc.steps.forEach(step => {
-              stepsHtml += `<div class="test-step">${step}</div>`;
-            });
-            stepsHtml += '</div>';
-          }
-          tcCard.innerHTML = `
-            <div class="test-case-header">
-              <div class="test-case-title">${tc.name}</div>
-              <div class="actions">
-                <button class="delete-test-case-btn text-red-600 hover:text-red-800">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
-                </button>
-              </div>
-            </div>
-            <div class="description">Group: ${group ? group.name : 'Unknown'}</div>
-            ${stepsHtml}
-          `;
-          testCasesList.appendChild(tcCard);
 
-          // Attach event listener for delete button
-          const deleteBtn = tcCard.querySelector('.delete-test-case-btn');
-          deleteBtn.addEventListener('click', () => {
-            if (currentRole !== 'admin') {
-              alert('You must be logged in as admin to perform this action.');
+        function closeLoginModal() {
+          loginModal.style.display = 'none';
+          emailInput.value = '';
+          passwordInput.value = '';
+        }
+
+        loginModalClose.addEventListener('click', closeLoginModal);
+        loginModal.addEventListener('click', (e) => {
+          if (e.target === loginModal) closeLoginModal();
+        });
+
+        loginSubmitBtn.addEventListener('click', () => {
+          const email = emailInput.value.trim();
+          const password = passwordInput.value.trim();
+
+          if (!email || !password) {
+            alert('Please enter both email and password.');
+            return;
+          }
+
+          console.log('Attempting login with email:', email);
+
+          auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+              const user = userCredential.user;
+              console.log('Login successful, UID:', user.uid);
+              alert('Login successful! UID: ' + user.uid);
+
+              // Fetch user role from Firestore
+              db.collection('users').doc(user.uid).get()
+                .then((doc) => {
+                  if (doc.exists) {
+                    const userData = doc.data();
+                    console.log('User data from Firestore:', userData);
+                    alert('Role fetched from Firestore: ' + userData.role);
+
+                    currentUser = email.split('@')[0]; // Extract username from email
+                    currentRole = userData.role;
+                    localStorage.setItem('userSession', JSON.stringify({ email, role: currentRole }));
+                    userInfo.textContent = `User: ${currentUser} (${currentRole})`;
+                    authButton.textContent = 'Logout';
+                    authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                    authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    updateViewBasedOnRole();
+                    closeLoginModal();
+                  } else {
+                    console.error('User role not found in Firestore');
+                    alert('User role not found in database.');
+                    auth.signOut();
+                  }
+                })
+                .catch((error) => {
+                  console.error('Error fetching user role from Firestore:', error);
+                  alert('Error fetching user role: ' + error.message);
+                  auth.signOut();
+                });
+            })
+            .catch((error) => {
+              console.error('Login error:', error);
+              let errorMessage = 'Invalid credentials.';
+              if (error.code === 'auth/user-not-found') {
+                errorMessage = 'User not found. Please check your email.';
+              } else if (error.code === 'auth/wrong-password') {
+                errorMessage = 'Incorrect password. Please try again.';
+              } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Invalid email format.';
+              } else if (error.code === 'auth/network-request-failed') {
+                errorMessage = 'Network error. Please check your internet connection.';
+              }
+              alert(errorMessage);
+            });
+        });
+
+        // Project Details Modal for Users
+        let currentGroupId = null;
+        let currentGroupName = null;
+        let currentProject = null;
+        const projectDetailsModal = document.getElementById('project-details-modal');
+        const projectNameInput = document.getElementById('project-name');
+        const userNameInput = document.getElementById('user-name');
+        const submitProjectDetailsBtn = document.getElementById('submit-project-details-btn');
+        const projectDetailsModalClose = projectDetailsModal.querySelector('.modal-close');
+
+        function openProjectDetailsModal() {
+          projectDetailsModal.style.display = 'flex';
+        }
+
+        function closeProjectDetailsModal() {
+          projectDetailsModal.style.display = 'none';
+          projectNameInput.value = '';
+          userNameInput.value = '';
+        }
+
+        projectDetailsModalClose.addEventListener('click', closeProjectDetailsModal);
+        projectDetailsModal.addEventListener('click', (e) => {
+          if (e.target === projectDetailsModal) closeProjectDetailsModal();
+        });
+
+        submitProjectDetailsBtn.addEventListener('click', () => {
+          const projectName = projectNameInput.value.trim();
+          const userName = userNameInput.value.trim();
+          if (!projectName || !userName) {
+            alert('Please fill in all fields.');
+            return;
+          }
+          currentProject = { projectName, userName, groupId: currentGroupId, completedTestCases: [] };
+          closeProjectDetailsModal();
+          showTestCasesPopup();
+        });
+
+        // Test Cases Popup for Users
+        const testCasesPopup = document.getElementById('test-cases-popup');
+        const testCasesPopupList = document.getElementById('test-cases-popup-list');
+        const confirmTestCasesBtn = document.getElementById('confirm-test-cases-btn');
+        const testCasesPopupClose = testCasesPopup.querySelector('.modal-close');
+
+        function showTestCasesPopup() {
+          testCasesPopupList.innerHTML = '';
+          db.collection('testCases').where('groupId', '==', currentGroupId).get().then(snapshot => {
+            const groupTestCases = [];
+            snapshot.forEach(doc => groupTestCases.push(doc.data()));
+            if (groupTestCases.length === 0) {
+              testCasesPopupList.innerHTML = '<p>No test cases available for this group.</p>';
+            } else {
+              groupTestCases.forEach(tc => {
+                const p = document.createElement('p');
+                p.textContent = tc.name;
+                testCasesPopupList.appendChild(p);
+              });
+            }
+            testCasesPopup.style.display = 'flex';
+          }).catch(error => {
+            console.error('Error loading test cases for popup:', error);
+            testCasesPopupList.innerHTML = '<p>Error loading test cases.</p>';
+          });
+        }
+
+        function closeTestCasesPopup() {
+          testCasesPopup.style.display = 'none';
+        }
+
+        testCasesPopupClose.addEventListener('click', closeTestCasesPopup);
+        testCasesPopup.addEventListener('click', (e) => {
+          if (e.target === testCasesPopup) closeTestCasesPopup();
+        });
+
+        confirmTestCasesBtn.addEventListener('click', () => {
+          closeTestCasesPopup();
+          userView.classList.add('hidden');
+          testCasesView.classList.remove('hidden');
+          loadTestCasesForUser();
+        });
+
+        // Load test cases for user interaction
+        const testCasesDetails = document.getElementById('test-cases-details');
+        const startProjectBtn = document.getElementById('start-project-btn');
+        const completeProjectBtn = document.getElementById('complete-project-btn');
+
+        function loadTestCasesForUser() {
+          testCasesDetails.innerHTML = '';
+          db.collection('testCases').where('groupId', '==', currentGroupId).get().then(snapshot => {
+            const groupTestCases = [];
+            snapshot.forEach(doc => groupTestCases.push(doc.data()));
+            if (groupTestCases.length === 0) {
+              testCasesDetails.innerHTML = '<p>No test cases available for this group.</p>';
               return;
             }
-            const tcId = tcCard.getAttribute('data-id');
-            if (confirm('Are you sure you want to delete this test case?')) {
-              let testCases = JSON.parse(localStorage.getItem('testCases'));
-              testCases = testCases.filter(tc => tc.id != tcId);
-              localStorage.setItem('testCases', JSON.stringify(testCases));
-              loadTestCases();
-            }
-          });
-        });
-      }
-
-      // Load reports for admin
-      function loadReports() {
-        const reportsList = document.getElementById('reports-list');
-        if (!reportsList) return;
-        reportsList.innerHTML = '';
-        const reports = JSON.parse(localStorage.getItem('reports')) || [];
-        if (reports.length === 0) {
-          reportsList.innerHTML = '<p>No reports available.</p>';
-          return;
-        }
-        reports.forEach((report, index) => {
-          const reportCard = document.createElement('div');
-          reportCard.className = 'completion-box';
-          reportCard.setAttribute('data-index', index);
-          const canvasId = `report-chart-${index}`;
-          reportCard.innerHTML = `
-            <h4>Project: ${report.projectName}</h4>
-            <p>User: ${report.userName}</p>
-            <p>Group: ${report.groupName}</p>
-            <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
-            <div class="graph-container">
-              <canvas id="${canvasId}"></canvas>
-            </div>
-          `;
-          reportsList.appendChild(reportCard);
-
-          // Create Chart
-          const ctx = document.getElementById(canvasId).getContext('2d');
-          new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: ['Completed', 'Remaining'],
-              datasets: [{
-                label: 'Test Cases',
-                data: [report.completedCount, report.totalCount - report.completedCount],
-                backgroundColor: ['#10b981', '#e5e7eb'],
-                borderColor: ['#10b981', '#e5e7eb'],
-                borderWidth: 1
-              }]
-            },
-            options: {
-              indexAxis: 'y',
-              scales: {
-                x: {
-                  beginAtZero: true,
-                  max: report.totalCount
-                }
-              },
-              plugins: {
-                legend: {
-                  display: false
-                }
+            groupTestCases.forEach(tc => {
+              const tcCard = document.createElement('div');
+              tcCard.className = 'test-case-card';
+              let stepsHtml = '';
+              if (tc.steps && tc.steps.length > 0) {
+                stepsHtml = '<div class="test-steps">';
+                tc.steps.forEach(step => {
+                  stepsHtml += `<div class="test-step">${step}</div>`;
+                });
+                stepsHtml += '</div>';
               }
-            }
-          });
-
-          // Attach click event to open detailed report modal
-          reportCard.addEventListener('click', () => {
-            openReportDetailsModal(report, index);
-          });
-        });
-      }
-
-      // Open Report Details Modal
-      const reportDetailsModal = document.getElementById('report-details-modal');
-      const reportDetailsContent = document.getElementById('report-details-content');
-      const closeReportDetailsBtn = document.getElementById('close-report-details-btn');
-      const reportDetailsModalClose = reportDetailsModal.querySelector('.modal-close');
-
-      function openReportDetailsModal(report, index) {
-        reportDetailsContent.innerHTML = `
-          <h4>Project: ${report.projectName}</h4>
-          <p>User: ${report.userName}</p>
-          <p>Group: ${report.groupName}</p>
-          <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
-        `;
-
-        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
-        const groupTestCases = testCases.filter(tc => tc.groupId == report.groupId);
-        const passedTestCases = groupTestCases.filter(tc => report.completedTestCases.includes(tc.id));
-        const pendingTestCases = groupTestCases.filter(tc => !report.completedTestCases.includes(tc.id));
-
-        const passedSection = document.createElement('div');
-        passedSection.className = 'status-section';
-        passedSection.innerHTML = `<h5 class="status-passed">Passed Test Cases (${passedTestCases.length})</h5>`;
-        if (passedTestCases.length === 0) {
-          passedSection.innerHTML += '<p>No test cases passed.</p>';
-        } else {
-          passedTestCases.forEach(tc => {
-            const item = document.createElement('div');
-            item.className = 'test-case-item';
-            item.innerHTML = `<div>${tc.name}</div>`;
-            passedSection.appendChild(item);
-          });
-        }
-        reportDetailsContent.appendChild(passedSection);
-
-        const pendingSection = document.createElement('div');
-        pendingSection.className = 'status-section';
-        pendingSection.innerHTML = `<h5 class="status-pending">Pending Test Cases (${pendingTestCases.length})</h5>`;
-        if (pendingTestCases.length === 0) {
-          pendingSection.innerHTML += '<p>No test cases pending.</p>';
-        } else {
-          pendingTestCases.forEach(tc => {
-            const item = document.createElement('div');
-            item.className = 'test-case-item';
-            item.innerHTML = `<div>${tc.name}</div>`;
-            pendingSection.appendChild(item);
-          });
-        }
-        reportDetailsContent.appendChild(pendingSection);
-
-        reportDetailsModal.style.display = 'flex';
-      }
-
-      function closeReportDetailsModal() {
-        reportDetailsModal.style.display = 'none';
-        reportDetailsContent.innerHTML = '';
-      }
-
-      closeReportDetailsBtn.addEventListener('click', closeReportDetailsModal);
-      reportDetailsModalClose.addEventListener('click', closeReportDetailsModal);
-      reportDetailsModal.addEventListener('click', (e) => {
-        if (e.target === reportDetailsModal) closeReportDetailsModal();
-      });
-
-      // Load test groups for user
-      function loadUserTestGroups() {
-        const userTestGroupsList = document.getElementById('user-test-groups-list');
-        if (!userTestGroupsList) return;
-        userTestGroupsList.innerHTML = '';
-        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
-        if (groups.length === 0) {
-          userTestGroupsList.innerHTML = '<p>No test groups available.</p>';
-          return;
-        }
-        groups.forEach(group => {
-          const groupCard = document.createElement('div');
-          groupCard.className = 'test-group-card';
-          groupCard.setAttribute('data-id', group.id);
-          groupCard.innerHTML = `<div class="title">${group.name}</div>`;
-          groupCard.addEventListener('click', () => {
-            currentGroupId = group.id;
-            currentGroupName = group.name;
-            openProjectDetailsModal();
-          });
-          userTestGroupsList.appendChild(groupCard);
-        });
-      }
-
-      // Group Modal functionality
-      const groupModal = document.getElementById('group-modal');
-      const groupModalTitle = document.getElementById('group-modal-title');
-      const groupNameInput = document.getElementById('group-name');
-      const groupDescriptionInput = document.getElementById('group-description');
-      const saveGroupBtn = document.getElementById('save-group-btn');
-      const groupModalClose = groupModal.querySelector('.modal-close');
-      let editingGroupId = null;
-
-      function openGroupModal(title, group = null) {
-        groupModalTitle.textContent = title;
-        groupNameInput.value = group ? group.name : '';
-        groupDescriptionInput.value = group ? group.description : '';
-        editingGroupId = group ? group.id : null;
-        groupModal.style.display = 'flex';
-      }
-
-      function closeGroupModal() {
-        groupModal.style.display = 'none';
-        groupNameInput.value = '';
-        groupDescriptionInput.value = '';
-        editingGroupId = null;
-      }
-
-      groupModalClose.addEventListener('click', closeGroupModal);
-      groupModal.addEventListener('click', (e) => {
-        if (e.target === groupModal) closeGroupModal();
-      });
-
-      saveGroupBtn.addEventListener('click', () => {
-        if (currentRole !== 'admin') {
-          alert('You must be logged in as admin to perform this action.');
-          return;
-        }
-        const name = groupNameInput.value.trim();
-        const description = groupDescriptionInput.value.trim();
-        if (!name || !description) {
-          alert('Please fill in all fields.');
-          return;
-        }
-
-        let groups = JSON.parse(localStorage.getItem('testGroups')) || [];
-        if (editingGroupId) {
-          const group = groups.find(g => g.id == editingGroupId);
-          group.name = name;
-          group.description = description;
-        } else {
-          const newGroup = {
-            id: groups.length ? Math.max(...groups.map(g => g.id)) + 1 : 1,
-            name,
-            description
-          };
-          groups.push(newGroup);
-        }
-        localStorage.setItem('testGroups', JSON.stringify(groups));
-        loadTestGroups();
-        loadUserTestGroups();
-        closeGroupModal();
-      });
-
-      // Test Case Modal functionality
-      const testCaseModal = document.getElementById('test-case-modal');
-      const testCaseGroupSelect = document.getElementById('test-case-group');
-      const testCaseNameInput = document.getElementById('test-case-name');
-      const testCaseStepsInput = document.getElementById('test-case-steps');
-      const saveTestCaseBtn = document.getElementById('save-test-case-btn');
-      const testCaseModalClose = testCaseModal.querySelector('.modal-close');
-
-      function openTestCaseModal() {
-        testCaseGroupSelect.innerHTML = '';
-        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
-        groups.forEach(group => {
-          const option = document.createElement('option');
-          option.value = group.id;
-          option.textContent = group.name;
-          testCaseGroupSelect.appendChild(option);
-        });
-        testCaseNameInput.value = '';
-        testCaseStepsInput.value = '';
-        testCaseModal.style.display = 'flex';
-      }
-
-      function closeTestCaseModal() {
-        testCaseModal.style.display = 'none';
-        testCaseNameInput.value = '';
-        testCaseStepsInput.value = '';
-      }
-
-      testCaseModalClose.addEventListener('click', closeTestCaseModal);
-      testCaseModal.addEventListener('click', (e) => {
-        if (e.target === testCaseModal) closeTestCaseModal();
-      });
-
-      saveTestCaseBtn.addEventListener('click', () => {
-        if (currentRole !== 'admin') {
-          alert('You must be logged in as admin to perform this action.');
-          return;
-        }
-        const groupId = parseInt(testCaseGroupSelect.value);
-        const name = testCaseNameInput.value.trim();
-        const steps = testCaseStepsInput.value.trim().split('\n').filter(step => step.trim() !== '');
-        if (!groupId || !name || steps.length === 0) {
-          alert('Please fill in all fields, including at least one test step.');
-          return;
-        }
-
-        let testCases = JSON.parse(localStorage.getItem('testCases')) || [];
-        const newTestCase = {
-          id: testCases.length ? Math.max(...testCases.map(tc => tc.id)) + 1 : 1,
-          groupId,
-          name,
-          steps
-        };
-        testCases.push(newTestCase);
-        localStorage.setItem('testCases', JSON.stringify(testCases));
-        loadTestCases();
-        closeTestCaseModal();
-      });
-
-      // Login Modal functionality
-      const loginModal = document.getElementById('login-modal');
-      const usernameInput = document.getElementById('username');
-      const passwordInput = document.getElementById('password');
-      const roleSelect = document.getElementById('role');
-      const loginSubmitBtn = document.getElementById('login-submit-btn');
-      const loginModalClose = loginModal.querySelector('.modal-close');
-
-      function openLoginModal() {
-        loginModal.style.display = 'flex';
-      }
-
-      function closeLoginModal() {
-        loginModal.style.display = 'none';
-        usernameInput.value = '';
-        passwordInput.value = '';
-        roleSelect.value = 'admin';
-      }
-
-      loginModalClose.addEventListener('click', closeLoginModal);
-      loginModal.addEventListener('click', (e) => {
-        if (e.target === loginModal) closeLoginModal();
-      });
-
-      loginSubmitBtn.addEventListener('click', () => {
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value.trim();
-        const role = roleSelect.value;
-        if (username === 'admin' && password === 'password' && role === 'admin') {
-          currentUser = username;
-          currentRole = role;
-          localStorage.setItem('userSession', JSON.stringify({ username, role }));
-          userInfo.textContent = `User: ${username} (${role})`;
-          authButton.textContent = 'Logout';
-          authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-          authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-          updateViewBasedOnRole();
-          closeLoginModal();
-          alert('Login successful!');
-        } else if (username === 'user' && password === 'password' && role === 'user') {
-          currentUser = username;
-          currentRole = role;
-          localStorage.setItem('userSession', JSON.stringify({ username, role }));
-          userInfo.textContent = `User: ${username} (${role})`;
-          authButton.textContent = 'Logout';
-          authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-          authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-          updateViewBasedOnRole();
-          closeLoginModal();
-          alert('Login successful!');
-        } else {
-          alert('Invalid credentials or role mismatch.');
-        }
-      });
-
-      // Project Details Modal for Users
-      let currentGroupId = null;
-      let currentGroupName = null;
-      let currentProject = null;
-      const projectDetailsModal = document.getElementById('project-details-modal');
-      const projectNameInput = document.getElementById('project-name');
-      const userNameInput = document.getElementById('user-name');
-      const submitProjectDetailsBtn = document.getElementById('submit-project-details-btn');
-      const projectDetailsModalClose = projectDetailsModal.querySelector('.modal-close');
-
-      function openProjectDetailsModal() {
-        projectDetailsModal.style.display = 'flex';
-      }
-
-      function closeProjectDetailsModal() {
-        projectDetailsModal.style.display = 'none';
-        projectNameInput.value = '';
-        userNameInput.value = '';
-      }
-
-      projectDetailsModalClose.addEventListener('click', closeProjectDetailsModal);
-      projectDetailsModal.addEventListener('click', (e) => {
-        if (e.target === projectDetailsModal) closeProjectDetailsModal();
-      });
-
-      submitProjectDetailsBtn.addEventListener('click', () => {
-        const projectName = projectNameInput.value.trim();
-        const userName = userNameInput.value.trim();
-        if (!projectName || !userName) {
-          alert('Please fill in all fields.');
-          return;
-        }
-        currentProject = { projectName, userName, groupId: currentGroupId, completedTestCases: [] };
-        closeProjectDetailsModal();
-        showTestCasesPopup();
-      });
-
-      // Test Cases Popup for Users
-      const testCasesPopup = document.getElementById('test-cases-popup');
-      const testCasesPopupList = document.getElementById('test-cases-popup-list');
-      const confirmTestCasesBtn = document.getElementById('confirm-test-cases-btn');
-      const testCasesPopupClose = testCasesPopup.querySelector('.modal-close');
-
-      function showTestCasesPopup() {
-        testCasesPopupList.innerHTML = '';
-        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
-        const groupTestCases = testCases.filter(tc => tc.groupId == currentGroupId);
-        if (groupTestCases.length === 0) {
-          testCasesPopupList.innerHTML = '<p>No test cases available for this group.</p>';
-        } else {
-          groupTestCases.forEach(tc => {
-            const p = document.createElement('p');
-            p.textContent = tc.name;
-            testCasesPopupList.appendChild(p);
-          });
-        }
-        testCasesPopup.style.display = 'flex';
-      }
-
-      function closeTestCasesPopup() {
-        testCasesPopup.style.display = 'none';
-      }
-
-      testCasesPopupClose.addEventListener('click', closeTestCasesPopup);
-      testCasesPopup.addEventListener('click', (e) => {
-        if (e.target === testCasesPopup) closeTestCasesPopup();
-      });
-
-      confirmTestCasesBtn.addEventListener('click', () => {
-        closeTestCasesPopup();
-        userView.classList.add('hidden');
-        testCasesView.classList.remove('hidden');
-        loadTestCasesForUser();
-      });
-
-      // Load test cases for user interaction
-      const testCasesDetails = document.getElementById('test-cases-details');
-      const startProjectBtn = document.getElementById('start-project-btn');
-      const completeProjectBtn = document.getElementById('complete-project-btn');
-
-      function loadTestCasesForUser() {
-        testCasesDetails.innerHTML = '';
-        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
-        const groupTestCases = testCases.filter(tc => tc.groupId == currentGroupId);
-        if (groupTestCases.length === 0) {
-          testCasesDetails.innerHTML = '<p>No test cases available for this group.</p>';
-          return;
-        }
-        groupTestCases.forEach(tc => {
-          const tcCard = document.createElement('div');
-          tcCard.className = 'test-case-card';
-          let stepsHtml = '';
-          if (tc.steps && tc.steps.length > 0) {
-            stepsHtml = '<div class="test-steps">';
-            tc.steps.forEach(step => {
-              stepsHtml += `<div class="test-step">${step}</div>`;
+              tcCard.innerHTML = `
+                <div class="test-case-title">${tc.name}</div>
+                ${stepsHtml}
+                <div class="custom-checkbox">
+                  <input type="checkbox" id="tc-${tc.id}" disabled>
+                  <label class="custom-checkbox-label" for="tc-${tc.id}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  </label>
+                  <span>Mark as completed</span>
+                </div>
+              `;
+              testCasesDetails.appendChild(tcCard);
             });
-            stepsHtml += '</div>';
-          }
-          tcCard.innerHTML = `
-            <div class="test-case-title">${tc.name}</div>
-            ${stepsHtml}
-            <div class="custom-checkbox">
-              <input type="checkbox" id="tc-${tc.id}" disabled>
-              <label class="custom-checkbox-label" for="tc-${tc.id}">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-              </label>
-              <span>Mark as completed</span>
-            </div>
-          `;
-          testCasesDetails.appendChild(tcCard);
-        });
-      }
+          }).catch(error => {
+            console.error('Error loading test cases for user:', error);
+            testCasesDetails.innerHTML = '<p>Error loading test cases.</p>';
+          });
+        }
 
-      startProjectBtn.addEventListener('click', () => {
-        const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-          checkbox.disabled = false;
-        });
-        startProjectBtn.classList.add('hidden');
-        completeProjectBtn.classList.remove('hidden');
-      });
-
-      completeProjectBtn.addEventListener('click', () => {
-        const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
-        let completedCount = 0;
-        const completedTestCases = [];
-        checkboxes.forEach(checkbox => {
-          if (checkbox.checked) {
-            const tcId = parseInt(checkbox.id.replace('tc-', ''));
-            completedTestCases.push(tcId);
-            completedCount++;
-          }
+        startProjectBtn.addEventListener('click', () => {
+          const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach(checkbox => {
+            checkbox.disabled = false;
+          });
+          startProjectBtn.classList.add('hidden');
+          completeProjectBtn.classList.remove('hidden');
         });
 
-        // Save report
-        const report = {
-          projectName: currentProject.projectName,
-          userName: currentProject.userName,
-          groupId: currentProject.groupId,
-          groupName: currentGroupName,
-          completedCount,
-          totalCount: checkboxes.length,
-          completedTestCases,
-          timestamp: new Date().toISOString()
-        };
-        let reports = JSON.parse(localStorage.getItem('reports')) || [];
-        reports.push(report);
-        localStorage.setItem('reports', JSON.stringify(reports));
-
-        // Show completion report
-        const completionReportModal = document.getElementById('completion-report-modal');
-        const completionReportDetails = document.getElementById('completion-report-details');
-        completionReportDetails.innerHTML = `
-          <div class="completion-box">
-            <h4>Project: ${report.projectName}</h4>
-            <p>User: ${report.userName}</p>
-            <p>Group: ${report.groupName}</p>
-            <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
-            <div class="graph-container">
-              <canvas id="completion-chart"></canvas>
-            </div>
-          </div>
-        `;
-        completionReportModal.style.display = 'flex';
-
-        // Create Chart
-        const ctx = document.getElementById('completion-chart').getContext('2d');
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['Completed', 'Remaining'],
-            datasets: [{
-              label: 'Test Cases',
-              data: [report.completedCount, report.totalCount - report.totalCount],
-              backgroundColor: ['#10b981', '#e5e7eb'],
-              borderColor: ['#10b981', '#e5e7eb'],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            indexAxis: 'y',
-            scales: {
-              x: {
-                beginAtZero: true,
-                max: report.totalCount
-              }
-            },
-            plugins: {
-              legend: {
-                display: false
-              }
+        completeProjectBtn.addEventListener('click', () => {
+          const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
+          let completedCount = 0;
+          const completedTestCases = [];
+          checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+              const tcId = parseInt(checkbox.id.replace('tc-', ''));
+              completedTestCases.push(tcId);
+              completedCount++;
             }
+          });
+
+          const report = {
+            projectName: currentProject.projectName,
+            userName: currentProject.userName,
+            groupId: currentProject.groupId,
+            groupName: currentGroupName,
+            completedCount,
+            totalCount: checkboxes.length,
+            completedTestCases,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          };
+
+          db.collection('reports').add(report).then(() => {
+            const completionReportModal = document.getElementById('completion-report-modal');
+            const completionReportDetails = document.getElementById('completion-report-details');
+            completionReportDetails.innerHTML = `
+              <div class="completion-box">
+                <h4>Project: ${report.projectName}</h4>
+                <p>User: ${report.userName}</p>
+                <p>Group: ${report.groupName}</p>
+                <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
+                <div class="graph-container">
+                  <canvas id="completion-chart"></canvas>
+                </div>
+              </div>
+            `;
+            completionReportModal.style.display = 'flex';
+
+            const ctx = document.getElementById('completion-chart').getContext('2d');
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: ['Completed', 'Remaining'],
+                datasets: [{
+                  label: 'Test Cases',
+                  data: [report.completedCount, report.totalCount - report.completedCount],
+                  backgroundColor: ['#10b981', '#e5e7eb'],
+                  borderColor: ['#10b981', '#e5e7eb'],
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                indexAxis: 'y',
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    max: report.totalCount
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+
+            testCasesView.classList.add('hidden');
+            userView.classList.remove('hidden');
+            currentProject = null;
+            startProjectBtn.classList.remove('hidden');
+            completeProjectBtn.classList.add('hidden');
+            loadUserTestGroups();
+            if (currentRole === 'admin') loadReports();
+          }).catch(error => {
+            console.error('Error saving report:', error);
+            alert('Error saving project report.');
+          });
+        });
+
+        // Completion Report Modal
+        const completionReportModal = document.getElementById('completion-report-modal');
+        const closeReportBtn = document.getElementById('close-report-btn');
+        const completionReportModalClose = completionReportModal.querySelector('.modal-close');
+
+        function closeCompletionReportModal() {
+          completionReportModal.style.display = 'none';
+        }
+
+        closeReportBtn.addEventListener('click', closeCompletionReportModal);
+        completionReportModalClose.addEventListener('click', closeCompletionReportModal);
+        completionReportModal.addEventListener('click', (e) => {
+          if (e.target === completionReportModal) closeCompletionReportModal();
+        });
+
+        // Admin Dashboard buttons
+        const manageGroupsBtn = document.getElementById('manage-groups-btn');
+        const manageTestCasesBtn = document.getElementById('manage-test-cases-btn');
+        const manageGroupsSection = document.getElementById('manage-groups-section');
+        const manageTestCasesSection = document.getElementById('manage-test-cases-section');
+        const viewReportsSection = document.getElementById('view-reports-section');
+
+        manageGroupsBtn.addEventListener('click', () => {
+          manageGroupsSection.classList.remove('hidden');
+          manageTestCasesSection.classList.add('hidden');
+          viewReportsSection.classList.add('hidden');
+          loadTestGroups();
+        });
+
+        manageTestCasesBtn.addEventListener('click', () => {
+          manageGroupsSection.classList.add('hidden');
+          manageTestCasesSection.classList.remove('hidden');
+          viewReportsSection.classList.add('hidden');
+          loadTestCases();
+        });
+
+        viewReportsBtn.addEventListener('click', () => {
+          manageGroupsSection.classList.add('hidden');
+          manageTestCasesSection.classList.add('hidden');
+          viewReportsSection.classList.remove('hidden');
+          loadReports();
+        });
+
+        // Add Group button
+        document.getElementById('add-group-btn').addEventListener('click', () => {
+          if (currentRole !== 'admin') {
+            alert('You must be logged in as admin to perform this action.');
+            return;
+          }
+          openGroupModal('Add Test Group');
+        });
+
+        // Add Test Case button
+        document.getElementById('add-test-case-btn').addEventListener('click', () => {
+          if (currentRole !== 'admin') {
+            alert('You must be logged in as admin to perform this action.');
+            return;
+          }
+          openTestCaseModal();
+        });
+
+        // Auth (Login/Logout) button
+        authButton.addEventListener('click', () => {
+          if (authButton.textContent === 'Logout') {
+            auth.signOut().then(() => {
+              currentUser = null;
+              currentRole = null;
+              localStorage.removeItem('userSession');
+              userInfo.textContent = 'User: Not logged in';
+              authButton.textContent = 'Login';
+              authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+              authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+              updateViewBasedOnRole();
+              alert('You have been logged out successfully!');
+            }).catch((error) => {
+              console.error('Logout error:', error);
+              alert('Error during logout: ' + error.message);
+            });
+          } else {
+            openLoginModal();
           }
         });
 
-        // Reset view
-        testCasesView.classList.add('hidden');
-        userView.classList.remove('hidden');
-        currentProject = null;
-        startProjectBtn.classList.remove('hidden');
-        completeProjectBtn.classList.add('hidden');
-        loadUserTestGroups();
-        if (currentRole === 'admin') loadReports();
-      });
-
-      // Completion Report Modal
-      const completionReportModal = document.getElementById('completion-report-modal');
-      const closeReportBtn = document.getElementById('close-report-btn');
-      const completionReportModalClose = completionReportModal.querySelector('.modal-close');
-
-      function closeCompletionReportModal() {
-        completionReportModal.style.display = 'none';
+        // Listen for auth state changes
+        auth.onAuthStateChanged((user) => {
+          console.log('Auth state changed, user:', user ? user.uid : 'null');
+          if (user) {
+            // User is signed in
+            db.collection('users').doc(user.uid).get()
+              .then((doc) => {
+                if (doc.exists) {
+                  const session = JSON.parse(localStorage.getItem('userSession'));
+                  if (session && session.role === doc.data().role) {
+                    currentUser = session.email.split('@')[0];
+                    currentRole = session.role;
+                    userInfo.textContent = `User: ${currentUser} (${currentRole})`;
+                    authButton.textContent = 'Logout';
+                    authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                    authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    updateViewBasedOnRole();
+                  } else {
+                    // Session mismatch or no session, force logout
+                    auth.signOut().then(() => {
+                      localStorage.removeItem('userSession');
+                      currentUser = null;
+                      currentRole = null;
+                      userInfo.textContent = 'User: Not logged in';
+                      authButton.textContent = 'Login';
+                      authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                      authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+                      updateViewBasedOnRole();
+                    });
+                  }
+                } else {
+                  console.error('No user role found in Firestore for UID:', user.uid);
+                  alert('No user role found in Firestore for UID: ' + user.uid);
+                  auth.signOut().then(() => {
+                    localStorage.removeItem('userSession');
+                    currentUser = null;
+                    currentRole = null;
+                    userInfo.textContent = 'User: Not logged in';
+                    authButton.textContent = 'Login';
+                    authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+                    updateViewBasedOnRole();
+                  });
+                }
+              })
+              .catch((error) => {
+                console.error('Error checking user role:', error);
+                alert('Error checking user role: ' + error.message);
+                auth.signOut().then(() => {
+                  localStorage.removeItem('userSession');
+                  currentUser = null;
+                  currentRole = null;
+                  userInfo.textContent = 'User: Not logged in';
+                  authButton.textContent = 'Login';
+                  authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                  authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+                  updateViewBasedOnRole();
+                });
+              });
+          } else {
+            // User is signed out
+            currentUser = null;
+            currentRole = null;
+            localStorage.removeItem('userSession');
+            userInfo.textContent = 'User: Not logged in';
+            authButton.textContent = 'Login';
+            authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+            updateViewBasedOnRole();
+          }
+        });
       }
 
-      closeReportBtn.addEventListener('click', closeCompletionReportModal);
-      completionReportModalClose.addEventListener('click', closeCompletionReportModal);
-      completionReportModal.addEventListener('click', (e) => {
-        if (e.target === completionReportModal) closeCompletionReportModal();
-      });
-
-      // Admin Dashboard buttons
-      const manageGroupsBtn = document.getElementById('manage-groups-btn');
-      const manageTestCasesBtn = document.getElementById('manage-test-cases-btn');
-      const manageGroupsSection = document.getElementById('manage-groups-section');
-      const manageTestCasesSection = document.getElementById('manage-test-cases-section');
-      const viewReportsSection = document.getElementById('view-reports-section');
-
-      manageGroupsBtn.addEventListener('click', () => {
-        manageGroupsSection.classList.remove('hidden');
-        manageTestCasesSection.classList.add('hidden');
-        viewReportsSection.classList.add('hidden');
-        loadTestGroups();
-      });
-
-      manageTestCasesBtn.addEventListener('click', () => {
-        manageGroupsSection.classList.add('hidden');
-        manageTestCasesSection.classList.remove('hidden');
-        viewReportsSection.classList.add('hidden');
-        loadTestCases();
-      });
-
-      viewReportsBtn.addEventListener('click', () => {
-        manageGroupsSection.classList.add('hidden');
-        manageTestCasesSection.classList.add('hidden');
-        viewReportsSection.classList.remove('hidden');
-        loadReports();
-      });
-
-      // Add Group button
-      document.getElementById('add-group-btn').addEventListener('click', () => {
-        if (currentRole !== 'admin') {
-          alert('You must be logged in as admin to perform this action.');
-          return;
-        }
-        openGroupModal('Add Test Group');
-      });
-
-      // Add Test Case button
-      document.getElementById('add-test-case-btn').addEventListener('click', () => {
-        if (currentRole !== 'admin') {
-          alert('You must be logged in as admin to perform this action.');
-          return;
-        }
-        openTestCaseModal();
-      });
-
-      // Auth (Login/Logout) button
-      authButton.addEventListener('click', () => {
-        if (authButton.textContent === 'Logout') {
-          currentUser = null;
-          currentRole = null;
-          localStorage.removeItem('userSession');
-          userInfo.textContent = 'User: Not logged in';
-          authButton.textContent = 'Login';
-          authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-          authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-          updateViewBasedOnRole();
-          alert('You have been logged out successfully!');
-        } else {
-          openLoginModal();
-        }
-      });
-
-      // Initial load based on role
-      updateViewBasedOnRole();
+      // Start the initialization process
+      initializeFirebase();
     });
   </script>
 </body>

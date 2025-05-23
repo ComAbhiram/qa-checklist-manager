@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>QA Checklist Manager - MacGlobal</title>
+  <meta name="app-name" content="qa_checklist_manager">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta property="og:title" content="QA Checklist Manager - MacGlobal">
+  <meta property="og:type" content="website">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts for Modern Typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js CDN for Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Favicons -->
+  <link rel="shortcut icon" href="_assets/images/favicon.ico">
+  <link rel="icon" href="_assets/images/icon-192x192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="_assets/images/apple-touch-icon.png" sizes="180x180">
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    .hero-section {
+      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+      color: white;
+      padding: 4rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1), transparent);
+      z-index: 0;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+    .content-section {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    footer {
+      background: #111827;
+      color: #d1d5db;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #3b82f6;
+      transition: width 0.3s ease;
+    }
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    .fade-in {
+      animation: fadeIn 1s ease-out;
+    }
+    .slide-up {
+      animation: slideUp 0.8s ease-out;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .checklist-header {
+      background: #3b82f6;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .dashboard-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .test-group-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: white;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .test-group-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .test-group-card .title {
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .test-group-card .description {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .test-group-card .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #6b7280;
+    }
+    .hidden {
+      display: none;
+    }
+    /* Enhanced Test Case Styling */
+    .test-case-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: white;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .test-case-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .test-case-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .test-case-title {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 1.1rem;
+    }
+    .test-steps {
+      margin-top: 0.5rem;
+      padding-left: 1rem;
+      border-left: 2px solid #3b82f6;
+    }
+    .test-step {
+      color: #4b5563;
+      font-size: 0.875rem;
+      margin: 0.25rem 0;
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    .test-step::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #3b82f6;
+      font-size: 1.2rem;
+    }
+    /* Custom Checkbox Styling */
+    .custom-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .custom-checkbox input {
+      display: none;
+    }
+    .custom-checkbox-label {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #3b82f6;
+      border-radius: 6px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .custom-checkbox input:checked + .custom-checkbox-label {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
+    }
+    .custom-checkbox-label svg {
+      display: none;
+      width: 16px;
+      height: 16px;
+      color: white;
+    }
+    .custom-checkbox input:checked + .custom-checkbox-label svg {
+      display: block;
+    }
+    .custom-checkbox span {
+      color: #4b5563;
+      font-size: 0.875rem;
+    }
+    /* Completion Box Styling */
+    .completion-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .completion-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .completion-box h4 {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+    .score-display {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #10b981;
+      margin-bottom: 1rem;
+    }
+    .graph-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    /* Test Case Status Styling */
+    .status-section {
+      margin-bottom: 1.5rem;
+    }
+    .status-section h5 {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+    .status-passed {
+      color: #10b981;
+    }
+    .status-pending {
+      color: #ef4444;
+    }
+    .test-case-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .test-case-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Theme Switcher -->
+  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
+    document.documentElement.classList.replace('adaptive', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  </script>
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">MacGlobal QA</h1>
+        <div class="space-x-6">
+          <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Home</a>
+          <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">About</a>
+          <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Contact</a>
+          <a href="#" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">Get Started</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content max-w-7xl mx-auto text-center">
+      <h2 class="text-5xl font-extrabold tracking-tight sm:text-6xl fade-in">
+        Elevate Your QA Workflow
+      </h2>
+      <p class="mt-6 text-xl sm:text-2xl max-w-3xl mx-auto slide-up">
+        Empower your team with MacGlobal's QA Checklist Manager. Create, manage, and optimize quality assurance processes with a sleek, intuitive platform designed for excellence.
+      </p>
+      <a href="#" class="mt-8 inline-block bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-blue-50 transition slide-up">Try It Now</a>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="content-section">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <div class="glass-card fade-in">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4">Why MacGlobal QA?</h3>
+        <ul class="space-y-3 text-gray-600">
+          <li class="flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Streamlined checklist creation
+          </li>
+          <li class="flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Real-time collaboration
+          </li>
+          <li class="flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Seamless integration with Mac ecosystems
+          </li>
+        </ul>
+      </div>
+      <div class="glass-card fade-in">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4">Global Reach</h3>
+        <p class="text-gray-600">
+          Designed for international teams, our platform supports multiple languages and time zones, ensuring your QA processes are consistent worldwide.
+        </p>
+        <a href="#" class="mt-4 inline-block text-blue-600 font-semibold hover:underline">Learn More</a>
+      </div>
+    </div>
+
+    <!-- QA Checklist Manager Section -->
+    <section class="slide-up">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="checklist-header">QA Checklist Manager</h2>
+        <div class="flex items-center gap-3">
+          <span id="user-info" class="text-gray-700">User: Not logged in</span>
+          <button id="auth-button" class="bg-gray-600 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition">Login</button>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard (Visible only to Admin) -->
+      <div id="admin-dashboard" class="mb-8 hidden">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Admin Dashboard</h3>
+        <div class="dashboard-buttons">
+          <button id="manage-groups-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">Manage Groups</button>
+          <button id="manage-test-cases-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">Manage Test Cases</button>
+          <button id="view-reports-btn" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition hidden">View Reports</button>
+        </div>
+      </div>
+
+      <!-- Manage Groups Section (Admin Only) -->
+      <div id="manage-groups-section" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-900">Manage Test Groups</h3>
+          <button id="add-group-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">+ Add Group</button>
+        </div>
+        <div id="test-groups-list"></div>
+      </div>
+
+      <!-- Manage Test Cases Section (Admin Only) -->
+      <div id="manage-test-cases-section" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-gray-900">Manage Test Cases</h3>
+          <button id="add-test-case-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">+ Add Test Case</button>
+        </div>
+        <div id="test-cases-list"></div>
+      </div>
+
+      <!-- View Reports Section (Admin Only) -->
+      <div id="view-reports-section" class="hidden">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">View Reports</h3>
+        <div id="reports-list"></div>
+      </div>
+
+      <!-- User View (Visible to Users) -->
+      <div id="user-view" class="hidden">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Available Test Groups</h3>
+        <div id="user-test-groups-list"></div>
+      </div>
+
+      <!-- Test Cases View (User Only, after clicking a group) -->
+      <div id="test-cases-view" class="hidden">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Test Cases</h3>
+        <div id="test-cases-details"></div>
+        <button id="start-project-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mt-4">Start Project</button>
+        <button id="complete-project-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mt-4 hidden">Complete Project</button>
+      </div>
+    </section>
+
+    <!-- Modal for Adding/Editing Groups (Admin Only) -->
+    <div id="group-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 id="group-modal-title" class="text-xl font-semibold mb-4"></h3>
+        <div class="mb-4">
+          <label for="group-name" class="block text-gray-700 mb-2">Group Name</label>
+          <input type="text" id="group-name" class="w-full p-2 border rounded" placeholder="Enter group name">
+        </div>
+        <div class="mb-4">
+          <label for="group-description" class="block text-gray-700 mb-2">Description</label>
+          <textarea id="group-description" class="w-full p-2 border rounded" placeholder="Enter description"></textarea>
+        </div>
+        <button id="save-group-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+      </div>
+    </div>
+
+    <!-- Modal for Adding Test Cases (Admin Only) -->
+    <div id="test-case-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 class="text-xl font-semibold mb-4">Add Test Case</h3>
+        <div class="mb-4">
+          <label for="test-case-group" class="block text-gray-700 mb-2">Select Group</label>
+          <select id="test-case-group" class="w-full p-2 border rounded"></select>
+        </div>
+        <div class="mb-4">
+          <label for="test-case-name" class="block text-gray-700 mb-2">Test Case Name</label>
+          <input type="text" id="test-case-name" class="w-full p-2 border rounded" placeholder="Enter test case name">
+        </div>
+        <div class="mb-4">
+          <label for="test-case-steps" class="block text-gray-700 mb-2">Test Steps (one per line)</label>
+          <textarea id="test-case-steps" class="w-full p-2 border rounded" placeholder="Enter test steps, one per line"></textarea>
+        </div>
+        <button id="save-test-case-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+      </div>
+    </div>
+
+    <!-- Modal for Login -->
+    <div id="login-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 class="text-xl font-semibold mb-4">Login to QA Checklist Manager</h3>
+        <div class="mb-4">
+          <label for="username" class="block text-gray-700 mb-2">Username</label>
+          <input type="text" id="username" class="w-full p-2 border rounded" placeholder="Enter username">
+        </div>
+        <div class="mb-4">
+          <label for="password" class="block text-gray-700 mb-2">Password</label>
+          <input type="password" id="password" class="w-full p-2 border rounded" placeholder="Enter password">
+        </div>
+        <div class="mb-4">
+          <label for="role" class="block text-gray-700 mb-2">Role</label>
+          <select id="role" class="w-full p-2 border rounded">
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+          </select>
+        </div>
+        <button id="login-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
+      </div>
+    </div>
+
+    <!-- Modal for User Project Details -->
+    <div id="project-details-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 class="text-xl font-semibold mb-4">Enter Project Details</h3>
+        <div class="mb-4">
+          <label for="project-name" class="block text-gray-700 mb-2">Project Name</label>
+          <input type="text" id="project-name" class="w-full p-2 border rounded" placeholder="Enter project name">
+        </div>
+        <div class="mb-4">
+          <label for="user-name" class="block text-gray-700 mb-2">Your Name</label>
+          <input type="text" id="user-name" class="w-full p-2 border rounded" placeholder="Enter your name">
+        </div>
+        <button id="submit-project-details-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+      </div>
+    </div>
+
+    <!-- Modal for Test Cases Popup (User) -->
+    <div id="test-cases-popup" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 class="text-xl font-semibold mb-4">Test Cases to Complete</h3>
+        <div id="test-cases-popup-list" class="mb-4"></div>
+        <button id="confirm-test-cases-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Proceed</button>
+      </div>
+    </div>
+
+    <!-- Modal for Completion Report -->
+    <div id="completion-report-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 class="text-xl font-semibold mb-4">Project Completion Report</h3>
+        <div id="completion-report-details"></div>
+        <button id="close-report-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4">Close</button>
+      </div>
+    </div>
+
+    <!-- Modal for Report Details (Admin) -->
+    <div id="report-details-modal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">×</span>
+        <h3 class="text-xl font-semibold mb-4">Report Details</h3>
+        <div id="report-details-content"></div>
+        <button id="close-report-details-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4">Close</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer" class="mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <p class="text-gray-300">© 2025 MacGlobal QA Checklist Manager. All rights reserved.</p>
+      <div class="mt-4 space-x-6">
+        <a href="#" class="text-gray-300 hover:text-white transition">Privacy Policy</a>
+        <a href="#" class="text-gray-300 hover:text-white transition">Terms of Service</a>
+        <a href="#" class="text-gray-300 hover:text-white transition">Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
+    document.addEventListener('contextmenu', (e) => {
+      const isMedia = ['img', 'image', 'video', 'svg', 'picture'].some(
+        tagName => tagName.localeCompare(e.target.tagName, undefined, { sensitivity: 'base' }) === 0,
+      );
+      isMedia && e.preventDefault();
+    });
+  </script>
+  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
+    window.canva_installFooter = (container) => {
+      if (!(container instanceof HTMLDivElement)) return;
+      fetch('_footer?lang=' + encodeURIComponent(navigator.language || 'en')).then(response => {
+        if (response.status !== 200) return;
+        response.text().then(footerStr => {
+          const div = document.createElement('div');
+          div.innerHTML = footerStr;
+          for (const child of [...div.children]) {
+            if (child.tagName.toLowerCase() !== 'script') container.append(child);
+          }
+        });
+      });
+    };
+  </script>
+  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
+    document.addEventListener('DOMContentLoaded', () => {
+      const footerContainer = document.getElementById('footer');
+      if (footerContainer) window.canva_installFooter(footerContainer);
+
+      // Initialize local storage for test groups, test cases, and reports if not already set
+      if (!localStorage.getItem('testGroups')) {
+        const initialGroups = [
+          { id: 1, name: 'UI Testing', description: 'UI Testing for user interface validation' },
+          { id: 2, name: 'Functionality Testing', description: 'Functionality Testing for core features' }
+        ];
+        localStorage.setItem('testGroups', JSON.stringify(initialGroups));
+      }
+
+      if (!localStorage.getItem('testCases')) {
+        const initialTestCases = [
+          { id: 1, groupId: 1, name: 'Check button styling', steps: ['Verify button color is blue', 'Check hover effect', 'Ensure text alignment'] },
+          { id: 2, groupId: 1, name: 'Verify form validation', steps: ['Submit empty form', 'Check error messages', 'Submit valid data'] },
+          { id: 3, groupId: 2, name: 'Test login functionality', steps: ['Enter invalid credentials', 'Enter valid credentials', 'Verify redirect'] }
+        ];
+        localStorage.setItem('testCases', JSON.stringify(initialTestCases));
+      }
+
+      if (!localStorage.getItem('reports')) {
+        localStorage.setItem('reports', JSON.stringify([]));
+      }
+
+      // Elements
+      const userInfo = document.getElementById('user-info');
+      const authButton = document.getElementById('auth-button');
+      const adminDashboard = document.getElementById('admin-dashboard');
+      const userView = document.getElementById('user-view');
+      const testCasesView = document.getElementById('test-cases-view');
+      const viewReportsBtn = document.getElementById('view-reports-btn');
+
+      // Check initial login state
+      let currentUser = null;
+      let currentRole = null;
+      const session = JSON.parse(localStorage.getItem('userSession'));
+      if (session) {
+        currentUser = session.username;
+        currentRole = session.role;
+        userInfo.textContent = `User: ${currentUser} (${currentRole})`;
+        authButton.textContent = 'Logout';
+        authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+        authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        updateViewBasedOnRole();
+      }
+
+      function updateViewBasedOnRole() {
+        if (currentRole === 'admin') {
+          adminDashboard.classList.remove('hidden');
+          viewReportsBtn.classList.remove('hidden'); // Show for admins
+          userView.classList.add('hidden');
+          testCasesView.classList.add('hidden');
+        } else if (currentRole === 'user') {
+          adminDashboard.classList.add('hidden'); // Hide admin dashboard entirely for users
+          userView.classList.remove('hidden');
+          testCasesView.classList.add('hidden');
+          loadUserTestGroups();
+        } else {
+          adminDashboard.classList.add('hidden');
+          userView.classList.add('hidden');
+          testCasesView.classList.add('hidden');
+        }
+      }
+
+      // Load test groups for admin
+      function loadTestGroups() {
+        const testGroupsList = document.getElementById('test-groups-list');
+        if (!testGroupsList) return;
+        testGroupsList.innerHTML = '';
+        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
+        if (groups.length === 0) {
+          testGroupsList.innerHTML = '<p>No test groups available.</p>';
+          return;
+        }
+        groups.forEach(group => {
+          const groupCard = document.createElement('div');
+          groupCard.className = 'test-group-card';
+          groupCard.setAttribute('data-id', group.id);
+          groupCard.innerHTML = `
+            <div class="title">${group.name}</div>
+            <div class="description">${group.description}</div>
+            <div class="actions">
+              <button class="edit-group-btn text-blue-600 hover:text-blue-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              </button>
+              <button class="delete-group-btn text-red-600 hover:text-red-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
+              </button>
+            </div>
+          `;
+          testGroupsList.appendChild(groupCard);
+
+          // Attach event listeners for edit and delete buttons
+          const editBtn = groupCard.querySelector('.edit-group-btn');
+          const deleteBtn = groupCard.querySelector('.delete-group-btn');
+
+          editBtn.addEventListener('click', () => {
+            if (currentRole !== 'admin') {
+              alert('You must be logged in as admin to perform this action.');
+              return;
+            }
+            const groupId = groupCard.getAttribute('data-id');
+            const groups = JSON.parse(localStorage.getItem('testGroups'));
+            const group = groups.find(g => g.id == groupId);
+            openGroupModal('Edit Test Group', group);
+          });
+
+          deleteBtn.addEventListener('click', () => {
+            if (currentRole !== 'admin') {
+              alert('You must be logged in as admin to perform this action.');
+              return;
+            }
+            const groupId = groupCard.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this test group?')) {
+              let groups = JSON.parse(localStorage.getItem('testGroups'));
+              let testCases = JSON.parse(localStorage.getItem('testCases')) || [];
+              groups = groups.filter(g => g.id != groupId);
+              testCases = testCases.filter(tc => tc.groupId != groupId);
+              localStorage.setItem('testGroups', JSON.stringify(groups));
+              localStorage.setItem('testCases', JSON.stringify(testCases));
+              loadTestGroups();
+            }
+          });
+        });
+      }
+
+      // Load test cases for admin
+      function loadTestCases() {
+        const testCasesList = document.getElementById('test-cases-list');
+        if (!testCasesList) return;
+        testCasesList.innerHTML = '';
+        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
+        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
+        if (testCases.length === 0) {
+          testCasesList.innerHTML = '<p>No test cases available.</p>';
+          return;
+        }
+        testCases.forEach(tc => {
+          const group = groups.find(g => g.id == tc.groupId);
+          const tcCard = document.createElement('div');
+          tcCard.className = 'test-case-card';
+          tcCard.setAttribute('data-id', tc.id);
+          let stepsHtml = '';
+          if (tc.steps && tc.steps.length > 0) {
+            stepsHtml = '<div class="test-steps">';
+            tc.steps.forEach(step => {
+              stepsHtml += `<div class="test-step">${step}</div>`;
+            });
+            stepsHtml += '</div>';
+          }
+          tcCard.innerHTML = `
+            <div class="test-case-header">
+              <div class="test-case-title">${tc.name}</div>
+              <div class="actions">
+                <button class="delete-test-case-btn text-red-600 hover:text-red-800">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
+                </button>
+              </div>
+            </div>
+            <div class="description">Group: ${group ? group.name : 'Unknown'}</div>
+            ${stepsHtml}
+          `;
+          testCasesList.appendChild(tcCard);
+
+          // Attach event listener for delete button
+          const deleteBtn = tcCard.querySelector('.delete-test-case-btn');
+          deleteBtn.addEventListener('click', () => {
+            if (currentRole !== 'admin') {
+              alert('You must be logged in as admin to perform this action.');
+              return;
+            }
+            const tcId = tcCard.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this test case?')) {
+              let testCases = JSON.parse(localStorage.getItem('testCases'));
+              testCases = testCases.filter(tc => tc.id != tcId);
+              localStorage.setItem('testCases', JSON.stringify(testCases));
+              loadTestCases();
+            }
+          });
+        });
+      }
+
+      // Load reports for admin
+      function loadReports() {
+        const reportsList = document.getElementById('reports-list');
+        if (!reportsList) return;
+        reportsList.innerHTML = '';
+        const reports = JSON.parse(localStorage.getItem('reports')) || [];
+        if (reports.length === 0) {
+          reportsList.innerHTML = '<p>No reports available.</p>';
+          return;
+        }
+        reports.forEach((report, index) => {
+          const reportCard = document.createElement('div');
+          reportCard.className = 'completion-box';
+          reportCard.setAttribute('data-index', index);
+          const canvasId = `report-chart-${index}`;
+          reportCard.innerHTML = `
+            <h4>Project: ${report.projectName}</h4>
+            <p>User: ${report.userName}</p>
+            <p>Group: ${report.groupName}</p>
+            <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
+            <div class="graph-container">
+              <canvas id="${canvasId}"></canvas>
+            </div>
+          `;
+          reportsList.appendChild(reportCard);
+
+          // Create Chart
+          const ctx = document.getElementById(canvasId).getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ['Completed', 'Remaining'],
+              datasets: [{
+                label: 'Test Cases',
+                data: [report.completedCount, report.totalCount - report.completedCount],
+                backgroundColor: ['#10b981', '#e5e7eb'],
+                borderColor: ['#10b981', '#e5e7eb'],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  max: report.totalCount
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                }
+              }
+            }
+          });
+
+          // Attach click event to open detailed report modal
+          reportCard.addEventListener('click', () => {
+            openReportDetailsModal(report, index);
+          });
+        });
+      }
+
+      // Open Report Details Modal
+      const reportDetailsModal = document.getElementById('report-details-modal');
+      const reportDetailsContent = document.getElementById('report-details-content');
+      const closeReportDetailsBtn = document.getElementById('close-report-details-btn');
+      const reportDetailsModalClose = reportDetailsModal.querySelector('.modal-close');
+
+      function openReportDetailsModal(report, index) {
+        reportDetailsContent.innerHTML = `
+          <h4>Project: ${report.projectName}</h4>
+          <p>User: ${report.userName}</p>
+          <p>Group: ${report.groupName}</p>
+          <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
+        `;
+
+        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
+        const groupTestCases = testCases.filter(tc => tc.groupId == report.groupId);
+        const passedTestCases = groupTestCases.filter(tc => report.completedTestCases.includes(tc.id));
+        const pendingTestCases = groupTestCases.filter(tc => !report.completedTestCases.includes(tc.id));
+
+        const passedSection = document.createElement('div');
+        passedSection.className = 'status-section';
+        passedSection.innerHTML = `<h5 class="status-passed">Passed Test Cases (${passedTestCases.length})</h5>`;
+        if (passedTestCases.length === 0) {
+          passedSection.innerHTML += '<p>No test cases passed.</p>';
+        } else {
+          passedTestCases.forEach(tc => {
+            const item = document.createElement('div');
+            item.className = 'test-case-item';
+            item.innerHTML = `<div>${tc.name}</div>`;
+            passedSection.appendChild(item);
+          });
+        }
+        reportDetailsContent.appendChild(passedSection);
+
+        const pendingSection = document.createElement('div');
+        pendingSection.className = 'status-section';
+        pendingSection.innerHTML = `<h5 class="status-pending">Pending Test Cases (${pendingTestCases.length})</h5>`;
+        if (pendingTestCases.length === 0) {
+          pendingSection.innerHTML += '<p>No test cases pending.</p>';
+        } else {
+          pendingTestCases.forEach(tc => {
+            const item = document.createElement('div');
+            item.className = 'test-case-item';
+            item.innerHTML = `<div>${tc.name}</div>`;
+            pendingSection.appendChild(item);
+          });
+        }
+        reportDetailsContent.appendChild(pendingSection);
+
+        reportDetailsModal.style.display = 'flex';
+      }
+
+      function closeReportDetailsModal() {
+        reportDetailsModal.style.display = 'none';
+        reportDetailsContent.innerHTML = '';
+      }
+
+      closeReportDetailsBtn.addEventListener('click', closeReportDetailsModal);
+      reportDetailsModalClose.addEventListener('click', closeReportDetailsModal);
+      reportDetailsModal.addEventListener('click', (e) => {
+        if (e.target === reportDetailsModal) closeReportDetailsModal();
+      });
+
+      // Load test groups for user
+      function loadUserTestGroups() {
+        const userTestGroupsList = document.getElementById('user-test-groups-list');
+        if (!userTestGroupsList) return;
+        userTestGroupsList.innerHTML = '';
+        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
+        if (groups.length === 0) {
+          userTestGroupsList.innerHTML = '<p>No test groups available.</p>';
+          return;
+        }
+        groups.forEach(group => {
+          const groupCard = document.createElement('div');
+          groupCard.className = 'test-group-card';
+          groupCard.setAttribute('data-id', group.id);
+          groupCard.innerHTML = `<div class="title">${group.name}</div>`;
+          groupCard.addEventListener('click', () => {
+            currentGroupId = group.id;
+            currentGroupName = group.name;
+            openProjectDetailsModal();
+          });
+          userTestGroupsList.appendChild(groupCard);
+        });
+      }
+
+      // Group Modal functionality
+      const groupModal = document.getElementById('group-modal');
+      const groupModalTitle = document.getElementById('group-modal-title');
+      const groupNameInput = document.getElementById('group-name');
+      const groupDescriptionInput = document.getElementById('group-description');
+      const saveGroupBtn = document.getElementById('save-group-btn');
+      const groupModalClose = groupModal.querySelector('.modal-close');
+      let editingGroupId = null;
+
+      function openGroupModal(title, group = null) {
+        groupModalTitle.textContent = title;
+        groupNameInput.value = group ? group.name : '';
+        groupDescriptionInput.value = group ? group.description : '';
+        editingGroupId = group ? group.id : null;
+        groupModal.style.display = 'flex';
+      }
+
+      function closeGroupModal() {
+        groupModal.style.display = 'none';
+        groupNameInput.value = '';
+        groupDescriptionInput.value = '';
+        editingGroupId = null;
+      }
+
+      groupModalClose.addEventListener('click', closeGroupModal);
+      groupModal.addEventListener('click', (e) => {
+        if (e.target === groupModal) closeGroupModal();
+      });
+
+      saveGroupBtn.addEventListener('click', () => {
+        if (currentRole !== 'admin') {
+          alert('You must be logged in as admin to perform this action.');
+          return;
+        }
+        const name = groupNameInput.value.trim();
+        const description = groupDescriptionInput.value.trim();
+        if (!name || !description) {
+          alert('Please fill in all fields.');
+          return;
+        }
+
+        let groups = JSON.parse(localStorage.getItem('testGroups')) || [];
+        if (editingGroupId) {
+          const group = groups.find(g => g.id == editingGroupId);
+          group.name = name;
+          group.description = description;
+        } else {
+          const newGroup = {
+            id: groups.length ? Math.max(...groups.map(g => g.id)) + 1 : 1,
+            name,
+            description
+          };
+          groups.push(newGroup);
+        }
+        localStorage.setItem('testGroups', JSON.stringify(groups));
+        loadTestGroups();
+        loadUserTestGroups();
+        closeGroupModal();
+      });
+
+      // Test Case Modal functionality
+      const testCaseModal = document.getElementById('test-case-modal');
+      const testCaseGroupSelect = document.getElementById('test-case-group');
+      const testCaseNameInput = document.getElementById('test-case-name');
+      const testCaseStepsInput = document.getElementById('test-case-steps');
+      const saveTestCaseBtn = document.getElementById('save-test-case-btn');
+      const testCaseModalClose = testCaseModal.querySelector('.modal-close');
+
+      function openTestCaseModal() {
+        testCaseGroupSelect.innerHTML = '';
+        const groups = JSON.parse(localStorage.getItem('testGroups')) || [];
+        groups.forEach(group => {
+          const option = document.createElement('option');
+          option.value = group.id;
+          option.textContent = group.name;
+          testCaseGroupSelect.appendChild(option);
+        });
+        testCaseNameInput.value = '';
+        testCaseStepsInput.value = '';
+        testCaseModal.style.display = 'flex';
+      }
+
+      function closeTestCaseModal() {
+        testCaseModal.style.display = 'none';
+        testCaseNameInput.value = '';
+        testCaseStepsInput.value = '';
+      }
+
+      testCaseModalClose.addEventListener('click', closeTestCaseModal);
+      testCaseModal.addEventListener('click', (e) => {
+        if (e.target === testCaseModal) closeTestCaseModal();
+      });
+
+      saveTestCaseBtn.addEventListener('click', () => {
+        if (currentRole !== 'admin') {
+          alert('You must be logged in as admin to perform this action.');
+          return;
+        }
+        const groupId = parseInt(testCaseGroupSelect.value);
+        const name = testCaseNameInput.value.trim();
+        const steps = testCaseStepsInput.value.trim().split('\n').filter(step => step.trim() !== '');
+        if (!groupId || !name || steps.length === 0) {
+          alert('Please fill in all fields, including at least one test step.');
+          return;
+        }
+
+        let testCases = JSON.parse(localStorage.getItem('testCases')) || [];
+        const newTestCase = {
+          id: testCases.length ? Math.max(...testCases.map(tc => tc.id)) + 1 : 1,
+          groupId,
+          name,
+          steps
+        };
+        testCases.push(newTestCase);
+        localStorage.setItem('testCases', JSON.stringify(testCases));
+        loadTestCases();
+        closeTestCaseModal();
+      });
+
+      // Login Modal functionality
+      const loginModal = document.getElementById('login-modal');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const roleSelect = document.getElementById('role');
+      const loginSubmitBtn = document.getElementById('login-submit-btn');
+      const loginModalClose = loginModal.querySelector('.modal-close');
+
+      function openLoginModal() {
+        loginModal.style.display = 'flex';
+      }
+
+      function closeLoginModal() {
+        loginModal.style.display = 'none';
+        usernameInput.value = '';
+        passwordInput.value = '';
+        roleSelect.value = 'admin';
+      }
+
+      loginModalClose.addEventListener('click', closeLoginModal);
+      loginModal.addEventListener('click', (e) => {
+        if (e.target === loginModal) closeLoginModal();
+      });
+
+      loginSubmitBtn.addEventListener('click', () => {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+        const role = roleSelect.value;
+        if (username === 'admin' && password === 'password' && role === 'admin') {
+          currentUser = username;
+          currentRole = role;
+          localStorage.setItem('userSession', JSON.stringify({ username, role }));
+          userInfo.textContent = `User: ${username} (${role})`;
+          authButton.textContent = 'Logout';
+          authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+          authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+          updateViewBasedOnRole();
+          closeLoginModal();
+          alert('Login successful!');
+        } else if (username === 'user' && password === 'password' && role === 'user') {
+          currentUser = username;
+          currentRole = role;
+          localStorage.setItem('userSession', JSON.stringify({ username, role }));
+          userInfo.textContent = `User: ${username} (${role})`;
+          authButton.textContent = 'Logout';
+          authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+          authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+          updateViewBasedOnRole();
+          closeLoginModal();
+          alert('Login successful!');
+        } else {
+          alert('Invalid credentials or role mismatch.');
+        }
+      });
+
+      // Project Details Modal for Users
+      let currentGroupId = null;
+      let currentGroupName = null;
+      let currentProject = null;
+      const projectDetailsModal = document.getElementById('project-details-modal');
+      const projectNameInput = document.getElementById('project-name');
+      const userNameInput = document.getElementById('user-name');
+      const submitProjectDetailsBtn = document.getElementById('submit-project-details-btn');
+      const projectDetailsModalClose = projectDetailsModal.querySelector('.modal-close');
+
+      function openProjectDetailsModal() {
+        projectDetailsModal.style.display = 'flex';
+      }
+
+      function closeProjectDetailsModal() {
+        projectDetailsModal.style.display = 'none';
+        projectNameInput.value = '';
+        userNameInput.value = '';
+      }
+
+      projectDetailsModalClose.addEventListener('click', closeProjectDetailsModal);
+      projectDetailsModal.addEventListener('click', (e) => {
+        if (e.target === projectDetailsModal) closeProjectDetailsModal();
+      });
+
+      submitProjectDetailsBtn.addEventListener('click', () => {
+        const projectName = projectNameInput.value.trim();
+        const userName = userNameInput.value.trim();
+        if (!projectName || !userName) {
+          alert('Please fill in all fields.');
+          return;
+        }
+        currentProject = { projectName, userName, groupId: currentGroupId, completedTestCases: [] };
+        closeProjectDetailsModal();
+        showTestCasesPopup();
+      });
+
+      // Test Cases Popup for Users
+      const testCasesPopup = document.getElementById('test-cases-popup');
+      const testCasesPopupList = document.getElementById('test-cases-popup-list');
+      const confirmTestCasesBtn = document.getElementById('confirm-test-cases-btn');
+      const testCasesPopupClose = testCasesPopup.querySelector('.modal-close');
+
+      function showTestCasesPopup() {
+        testCasesPopupList.innerHTML = '';
+        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
+        const groupTestCases = testCases.filter(tc => tc.groupId == currentGroupId);
+        if (groupTestCases.length === 0) {
+          testCasesPopupList.innerHTML = '<p>No test cases available for this group.</p>';
+        } else {
+          groupTestCases.forEach(tc => {
+            const p = document.createElement('p');
+            p.textContent = tc.name;
+            testCasesPopupList.appendChild(p);
+          });
+        }
+        testCasesPopup.style.display = 'flex';
+      }
+
+      function closeTestCasesPopup() {
+        testCasesPopup.style.display = 'none';
+      }
+
+      testCasesPopupClose.addEventListener('click', closeTestCasesPopup);
+      testCasesPopup.addEventListener('click', (e) => {
+        if (e.target === testCasesPopup) closeTestCasesPopup();
+      });
+
+      confirmTestCasesBtn.addEventListener('click', () => {
+        closeTestCasesPopup();
+        userView.classList.add('hidden');
+        testCasesView.classList.remove('hidden');
+        loadTestCasesForUser();
+      });
+
+      // Load test cases for user interaction
+      const testCasesDetails = document.getElementById('test-cases-details');
+      const startProjectBtn = document.getElementById('start-project-btn');
+      const completeProjectBtn = document.getElementById('complete-project-btn');
+
+      function loadTestCasesForUser() {
+        testCasesDetails.innerHTML = '';
+        const testCases = JSON.parse(localStorage.getItem('testCases')) || [];
+        const groupTestCases = testCases.filter(tc => tc.groupId == currentGroupId);
+        if (groupTestCases.length === 0) {
+          testCasesDetails.innerHTML = '<p>No test cases available for this group.</p>';
+          return;
+        }
+        groupTestCases.forEach(tc => {
+          const tcCard = document.createElement('div');
+          tcCard.className = 'test-case-card';
+          let stepsHtml = '';
+          if (tc.steps && tc.steps.length > 0) {
+            stepsHtml = '<div class="test-steps">';
+            tc.steps.forEach(step => {
+              stepsHtml += `<div class="test-step">${step}</div>`;
+            });
+            stepsHtml += '</div>';
+          }
+          tcCard.innerHTML = `
+            <div class="test-case-title">${tc.name}</div>
+            ${stepsHtml}
+            <div class="custom-checkbox">
+              <input type="checkbox" id="tc-${tc.id}" disabled>
+              <label class="custom-checkbox-label" for="tc-${tc.id}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+              </label>
+              <span>Mark as completed</span>
+            </div>
+          `;
+          testCasesDetails.appendChild(tcCard);
+        });
+      }
+
+      startProjectBtn.addEventListener('click', () => {
+        const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.disabled = false;
+        });
+        startProjectBtn.classList.add('hidden');
+        completeProjectBtn.classList.remove('hidden');
+      });
+
+      completeProjectBtn.addEventListener('click', () => {
+        const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
+        let completedCount = 0;
+        const completedTestCases = [];
+        checkboxes.forEach(checkbox => {
+          if (checkbox.checked) {
+            const tcId = parseInt(checkbox.id.replace('tc-', ''));
+            completedTestCases.push(tcId);
+            completedCount++;
+          }
+        });
+
+        // Save report
+        const report = {
+          projectName: currentProject.projectName,
+          userName: currentProject.userName,
+          groupId: currentProject.groupId,
+          groupName: currentGroupName,
+          completedCount,
+          totalCount: checkboxes.length,
+          completedTestCases,
+          timestamp: new Date().toISOString()
+        };
+        let reports = JSON.parse(localStorage.getItem('reports')) || [];
+        reports.push(report);
+        localStorage.setItem('reports', JSON.stringify(reports));
+
+        // Show completion report
+        const completionReportModal = document.getElementById('completion-report-modal');
+        const completionReportDetails = document.getElementById('completion-report-details');
+        completionReportDetails.innerHTML = `
+          <div class="completion-box">
+            <h4>Project: ${report.projectName}</h4>
+            <p>User: ${report.userName}</p>
+            <p>Group: ${report.groupName}</p>
+            <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
+            <div class="graph-container">
+              <canvas id="completion-chart"></canvas>
+            </div>
+          </div>
+        `;
+        completionReportModal.style.display = 'flex';
+
+        // Create Chart
+        const ctx = document.getElementById('completion-chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Completed', 'Remaining'],
+            datasets: [{
+              label: 'Test Cases',
+              data: [report.completedCount, report.totalCount - report.totalCount],
+              backgroundColor: ['#10b981', '#e5e7eb'],
+              borderColor: ['#10b981', '#e5e7eb'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            scales: {
+              x: {
+                beginAtZero: true,
+                max: report.totalCount
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
+          }
+        });
+
+        // Reset view
+        testCasesView.classList.add('hidden');
+        userView.classList.remove('hidden');
+        currentProject = null;
+        startProjectBtn.classList.remove('hidden');
+        completeProjectBtn.classList.add('hidden');
+        loadUserTestGroups();
+        if (currentRole === 'admin') loadReports();
+      });
+
+      // Completion Report Modal
+      const completionReportModal = document.getElementById('completion-report-modal');
+      const closeReportBtn = document.getElementById('close-report-btn');
+      const completionReportModalClose = completionReportModal.querySelector('.modal-close');
+
+      function closeCompletionReportModal() {
+        completionReportModal.style.display = 'none';
+      }
+
+      closeReportBtn.addEventListener('click', closeCompletionReportModal);
+      completionReportModalClose.addEventListener('click', closeCompletionReportModal);
+      completionReportModal.addEventListener('click', (e) => {
+        if (e.target === completionReportModal) closeCompletionReportModal();
+      });
+
+      // Admin Dashboard buttons
+      const manageGroupsBtn = document.getElementById('manage-groups-btn');
+      const manageTestCasesBtn = document.getElementById('manage-test-cases-btn');
+      const manageGroupsSection = document.getElementById('manage-groups-section');
+      const manageTestCasesSection = document.getElementById('manage-test-cases-section');
+      const viewReportsSection = document.getElementById('view-reports-section');
+
+      manageGroupsBtn.addEventListener('click', () => {
+        manageGroupsSection.classList.remove('hidden');
+        manageTestCasesSection.classList.add('hidden');
+        viewReportsSection.classList.add('hidden');
+        loadTestGroups();
+      });
+
+      manageTestCasesBtn.addEventListener('click', () => {
+        manageGroupsSection.classList.add('hidden');
+        manageTestCasesSection.classList.remove('hidden');
+        viewReportsSection.classList.add('hidden');
+        loadTestCases();
+      });
+
+      viewReportsBtn.addEventListener('click', () => {
+        manageGroupsSection.classList.add('hidden');
+        manageTestCasesSection.classList.add('hidden');
+        viewReportsSection.classList.remove('hidden');
+        loadReports();
+      });
+
+      // Add Group button
+      document.getElementById('add-group-btn').addEventListener('click', () => {
+        if (currentRole !== 'admin') {
+          alert('You must be logged in as admin to perform this action.');
+          return;
+        }
+        openGroupModal('Add Test Group');
+      });
+
+      // Add Test Case button
+      document.getElementById('add-test-case-btn').addEventListener('click', () => {
+        if (currentRole !== 'admin') {
+          alert('You must be logged in as admin to perform this action.');
+          return;
+        }
+        openTestCaseModal();
+      });
+
+      // Auth (Login/Logout) button
+      authButton.addEventListener('click', () => {
+        if (authButton.textContent === 'Logout') {
+          currentUser = null;
+          currentRole = null;
+          localStorage.removeItem('userSession');
+          userInfo.textContent = 'User: Not logged in';
+          authButton.textContent = 'Login';
+          authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+          authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
+          updateViewBasedOnRole();
+          alert('You have been logged out successfully!');
+        } else {
+          openLoginModal();
+        }
+      });
+
+      // Initial load based on role
+      updateViewBasedOnRole();
+    });
+  </script>
+</body>
+</html>

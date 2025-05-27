@@ -1,1564 +1,1455 @@
 <!DOCTYPE html>
-<html dir="ltr" lang="en">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>QA Checklist Manager - ISS QA</title>
-  <meta name="app-name" content="qa_checklist_manager">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta property="og:title" content="QA Checklist Manager - ISS QA">
-  <meta property="og:type" content="website">
-
-  <!-- Tailwind CSS CDN -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Case Management System</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Google Fonts for Modern Typography -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Chart.js CDN for Graphs -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Firebase SDK (Updated to 10.12.2) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-
-  <!-- Favicons -->
-  <link rel="shortcut icon" href="_assets/images/favicon.ico">
-  <link rel="icon" href="_assets/images/icon-192x192.png" sizes="192x192">
-  <link rel="apple-touch-icon" href="_assets/images/apple-touch-icon.png" sizes="180x180">
-
-  <!-- Custom Styles -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
-      margin: 0;
-      overflow-x: hidden;
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
     }
-    .hero-section {
-      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
-      color: white;
-      padding: 4rem 2rem;
-      position: relative;
-      overflow: hidden;
+    .marquee {
+      display: inline-block;
+      white-space: nowrap;
+      animation: marquee 40s linear infinite;
     }
-    .hero-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1), transparent);
-      z-index: 0;
+    .marquee:hover {
+      animation-play-state: paused;
     }
-    .hero-content {
-      position: relative;
-      z-index: 1;
+    .custom-shadow {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
-    .content-section {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2rem 1rem;
+    .input-focus {
+      transition: all 0.3s ease;
     }
-    footer {
-      background: #111827;
-      color: #d1d5db;
-      padding: 2rem 1rem;
-      text-align: center;
-    }
-    .nav-link {
-      position: relative;
-      transition: color 0.3s ease;
-    }
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: #3b82f6;
-      transition: width 0.3s ease;
-    }
-    .nav-link:hover::after {
-      width: 100%;
-    }
-    .fade-in {
-      animation: fadeIn 1s ease-out;
-    }
-    .slide-up {
-      animation: slideUp 0.8s ease-out;
-    }
-    @keyframes fadeIn {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
-    }
-    @keyframes slideUp {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .checklist-header {
-      background: #3b82f6;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-    .dashboard-buttons {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .test-group-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      background: white;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .test-group-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .test-group-card .title {
-      font-weight: 600;
-      color: #1f2937;
-    }
-    .test-group-card .description {
-      color: #6b7280;
-      font-size: 0.875rem;
-    }
-    .test-group-card .actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 600px;
-      position: relative;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    .modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      cursor: pointer;
-      font-size: 1.5rem;
-      color: #6b7280;
-    }
-    .hidden {
-      display: none;
-    }
-    /* Enhanced Test Case Styling */
-    .test-case-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      background: white;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .test-case-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .test-case-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-    .test-case-title {
-      font-weight: 600;
-      color: #1f2937;
-      font-size: 1.1rem;
-    }
-    .test-steps {
-      margin-top: 0.5rem;
-      padding-left: 1rem;
-      border-left: 2px solid #3b82f6;
-    }
-    .test-step {
-      color: #4b5563;
-      font-size: 0.875rem;
-      margin: 0.25rem 0;
-      position: relative;
-      padding-left: 1.5rem;
-    }
-    .test-step::before {
-      content: '•';
-      position: absolute;
-      left: 0;
-      color: #3b82f6;
-      font-size: 1.2rem;
-    }
-    /* Custom Checkbox Styling */
-    .custom-checkbox {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .custom-checkbox input {
-      display: none;
-    }
-    .custom-checkbox-label {
-      width: 24px;
-      height: 24px;
-      border: 2px solid #3b82f6;
-      border-radius: 6px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-    .custom-checkbox input:checked + .custom-checkbox-label {
-      background-color: #3b82f6;
+    .input-focus:focus {
       border-color: #3b82f6;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
     }
-    .custom-checkbox-label svg {
-      display: none;
-      width: 16px;
-      height: 16px;
-      color: white;
+    .card-hover {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .custom-checkbox input:checked + .custom-checkbox-label svg {
-      display: block;
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
     }
-    .custom-checkbox span {
-      color: #4b5563;
-      font-size: 0.875rem;
+    .sidebar-item {
+      transition: background 0.2s ease;
     }
-    /* Completion Box Styling */
-    .completion-box {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    .sidebar-item:hover {
+      background: #e0f2fe;
     }
-    .completion-box:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .completion-box h4 {
-      font-weight: 600;
+    .tab-active {
+      border-bottom: 2px solid #3b82f6;
       color: #1f2937;
-      margin-bottom: 1rem;
+      font-weight: 500;
     }
-    .score-display {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #10b981;
-      margin-bottom: 1rem;
-    }
-    .graph-container {
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    /* Test Case Status Styling */
-    .status-section {
-      margin-bottom: 1.5rem;
-    }
-    .status-section h5 {
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 0.5rem;
-    }
-    .status-passed {
-      color: #10b981;
-    }
-    .status-pending {
-      color: #ef4444;
-    }
-    .test-case-item {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .test-case-item:last-child {
-      border-bottom: none;
-    }
-    /* Fix for Login Modal Display */
-    #login-modal.modal {
-      display: none !important; /* Ensure it's hidden by default */
-    }
-    #login-modal.modal[style*="display: flex"] {
-      display: flex !important; /* Ensure it shows when display is set */
-      visibility: visible !important;
-      opacity: 1 !important;
+    .tab-inactive {
+      border-bottom: 2px solid transparent;
+      color: #6b7280;
     }
   </style>
 </head>
-<body>
-  <!-- Theme Switcher -->
-  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
-    document.documentElement.classList.replace('adaptive', window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  </script>
+<body class="bg-gray-100 font-sans">
+  <div id="root"></div>
+  <script>
+    const { useState, useEffect } = React;
+    const ReactDOM = window.ReactDOM;
+    const Chart = window.Chart;
 
-  <!-- Header -->
-  <header class="bg-white shadow-sm sticky top-0 z-50">
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">ISS QA</h1>
-        <div class="space-x-6">
-          <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Home</a>
-          <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">About</a>
-          <a href="#" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Contact</a>
-          <a href="#" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">Get Started</a>
-        </div>
-      </div>
-    </nav>
-  </header>
+    // Validate Supabase client loading
+    if (!window.supabase) {
+      console.error('Supabase client failed to load. Check the CDN URL or network connectivity.');
+      throw new Error('Supabase client not available');
+    }
 
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="hero-content max-w-7xl mx-auto text-center">
-      <h2 class="text-5xl font-extrabold tracking-tight sm:text-6xl fade-in">
-        Elevate Your QA Workflow
-      </h2>
-      <p class="mt-6 text-xl sm:text-2xl max-w-3xl mx-auto slide-up">
-        Empower your team with ISS QA's QA Checklist Manager. Create, manage, and optimize quality assurance processes with a sleek, intuitive platform designed for excellence.
-      </p>
-      <a href="#" class="mt-8 inline-block bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-blue-50 transition slide-up">Try It Now</a>
-    </div>
-  </section>
+    // Initialize Supabase
+    const supabase = window.supabase.createClient(
+      'https://zvlhklttjjddauidtjas.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2bGhrbHR0ampkZGF1aWR0amFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzMjIxMTYsImV4cCI6MjA2Mzg5ODExNn0.XF1eNZo_DwskyKo-mmB_ivx7GTcugAaFEugdPmou-lw'
+    );
 
-  <!-- Main Content -->
-  <main class="content-section">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-      <div class="glass-card fade-in">
-        <h3 class="text-2xl font-semibold text-gray-900 mb-4">Why ISS QA?</h3>
-        <ul class="space-y-3 text-gray-600">
-          <li class="flex items-center">
-            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            Streamlined checklist creation
-          </li>
-          <li class="flex items-center">
-            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            Real-time collaboration
-          </li>
-          <li class="flex items-center">
-            <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            Seamless integration with Mac ecosystems
-          </li>
-        </ul>
-      </div>
-      <div class="glass-card fade-in">
-        <h3 class="text-2xl font-semibold text-gray-900 mb-4">Global Reach</h3>
-        <p class="text-gray-600">
-          Designed for international teams, our platform supports multiple languages and time zones, ensuring your QA processes are consistent worldwide.
-        </p>
-        <a href="#" class="mt-4 inline-block text-blue-600 font-semibold hover:underline">Learn More</a>
-      </div>
-    </div>
+    // LocalStorage Helper Functions (used for session data and fallback)
+    const getLocalStorageData = (key) => {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+      } catch (err) {
+        console.error(`Error reading ${key} from localStorage:`, err.message);
+        return [];
+      }
+    };
 
-    <!-- QA Checklist Manager Section -->
-    <section class="slide-up">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="checklist-header">QA Checklist Manager</h2>
-        <div class="flex items-center gap-3">
-          <span id="user-info" class="text-gray-700">User: Not logged in</span>
-          <button id="auth-button" class="bg-gray-600 text-white px-4 py-2 rounded-full hover:bg-gray-700 transition">Login</button>
-        </div>
-      </div>
+    const setLocalStorageData = (key, data) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (err) {
+        console.error(`Error writing to ${key} in localStorage:`, err.message);
+        throw err;
+      }
+    };
 
-      <!-- Admin Dashboard (Visible only to Admin) -->
-      <div id="admin-dashboard" class="mb-8 hidden">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">Admin Dashboard</h3>
-        <div class="dashboard-buttons">
-          <button id="manage-groups-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">Manage Groups</button>
-          <button id="manage-test-cases-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">Manage Test Cases</button>
-          <button id="view-reports-btn" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition hidden">View Reports</button>
-        </div>
-      </div>
-
-      <!-- Manage Groups Section (Admin Only) -->
-      <div id="manage-groups-section" class="hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900">Manage Test Groups</h3>
-          <button id="add-group-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">+ Add Group</button>
-        </div>
-        <div id="test-groups-list"></div>
-      </div>
-
-      <!-- Manage Test Cases Section (Admin Only) -->
-      <div id="manage-test-cases-section" class="hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-semibold text-gray-900">Manage Test Cases</h3>
-          <button id="add-test-case-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">+ Add Test Case</button>
-        </div>
-        <div id="test-cases-list"></div>
-      </div>
-
-      <!-- View Reports Section (Admin Only) -->
-      <div id="view-reports-section" class="hidden">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">View Reports</h3>
-        <div id="reports-list"></div>
-      </div>
-
-      <!-- User View (Visible to Users) -->
-      <div id="user-view" class="hidden">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">Available Test Groups</h3>
-        <div id="user-test-groups-list"></div>
-      </div>
-
-      <!-- Test Cases View (User Only, after clicking a group) -->
-      <div id="test-cases-view" class="hidden">
-        <h3 class="text-xl font-semibold text-gray-900 mb-4">Test Cases</h3>
-        <div id="test-cases-details"></div>
-        <button id="start-project-btn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition mt-4">Start Project</button>
-        <button id="complete-project-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition mt-4 hidden">Complete Project</button>
-      </div>
-    </section>
-
-    <!-- Modal for Adding/Editing Groups (Admin Only) -->
-    <div id="group-modal" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 id="group-modal-title" class="text-xl font-semibold mb-4"></h3>
-        <div class="mb-4">
-          <label for="group-name" class="block text-gray-700 mb-2">Group Name</label>
-          <input type="text" id="group-name" class="w-full p-2 border rounded" placeholder="Enter group name">
-        </div>
-        <div class="mb-4">
-          <label for="group-description" class="block text-gray-700 mb-2">Description</label>
-          <textarea id="group-description" class="w-full p-2 border rounded" placeholder="Enter description"></textarea>
-        </div>
-        <button id="save-group-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
-      </div>
-    </div>
-
-    <!-- Modal for Adding Test Cases (Admin Only) -->
-    <div id="test-case-modal" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 class="text-xl font-semibold mb-4">Add Test Case</h3>
-        <div class="mb-4">
-          <label for="test-case-group" class="block text-gray-700 mb-2">Select Group</label>
-          <select id="test-case-group" class="w-full p-2 border rounded"></select>
-        </div>
-        <div class="mb-4">
-          <label for="test-case-name" class="block text-gray-700 mb-2">Test Case Name</label>
-          <input type="text" id="test-case-name" class="w-full p-2 border rounded" placeholder="Enter test case name">
-        </div>
-        <div class="mb-4">
-          <label for="test-case-steps" class="block text-gray-700 mb-2">Test Steps (one per line)</label>
-          <textarea id="test-case-steps" class="w-full p-2 border rounded" placeholder="Enter test steps, one per line"></textarea>
-        </div>
-        <button id="save-test-case-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
-      </div>
-    </div>
-
-    <!-- Modal for Login -->
-    <div id="login-modal" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 class="text-xl font-semibold mb-4">Login to QA Checklist Manager</h3>
-        <div class="mb-4">
-          <label for="email" class="block text-gray-700 mb-2">Email</label>
-          <input type="email" id="email" class="w-full p-2 border rounded" placeholder="e.g., admin@example.com">
-        </div>
-        <div class="mb-4">
-          <label for="password" class="block text-gray-700 mb-2">Password</label>
-          <input type="password" id="password" class="w-full p-2 border rounded" placeholder="Enter password">
-        </div>
-        <button id="login-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Login</button>
-      </div>
-    </div>
-
-    <!-- Modal for User Project Details -->
-    <div id="project-details-modal" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 class="text-xl font-semibold mb-4">Enter Project Details</h3>
-        <div class="mb-4">
-          <label for="project-name" class="block text-gray-700 mb-2">Project Name</label>
-          <input type="text" id="project-name" class="w-full p-2 border rounded" placeholder="Enter project name">
-        </div>
-        <div class="mb-4">
-          <label for="user-name" class="block text-gray-700 mb-2">Your Name</label>
-          <input type="text" id="user-name" class="w-full p-2 border rounded" placeholder="Enter your name">
-        </div>
-        <button id="submit-project-details-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
-      </div>
-    </div>
-
-    <!-- Modal for Test Cases Popup (User) -->
-    <div id="test-cases-popup" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 class="text-xl font-semibold mb-4">Test Cases to Complete</h3>
-        <div id="test-cases-popup-list" class="mb-4"></div>
-        <button id="confirm-test-cases-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Proceed</button>
-      </div>
-    </div>
-
-    <!-- Modal for Completion Report -->
-    <div id="completion-report-modal" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 class="text-xl font-semibold mb-4">Project Completion Report</h3>
-        <div id="completion-report-details"></div>
-        <button id="close-report-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4">Close</button>
-      </div>
-    </div>
-
-    <!-- Modal for Report Details (Admin) -->
-    <div id="report-details-modal" class="modal">
-      <div class="modal-content">
-        <span class="modal-close">×</span>
-        <h3 class="text-xl font-semibold mb-4">Report Details</h3>
-        <div id="report-details-content"></div>
-        <button id="close-report-details-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4">Close</button>
-      </div>
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer id="footer" class="mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <p class="text-gray-300">© 2025 ISS QA Checklist Manager. All rights reserved.</p>
-      <div class="mt-4 space-x-6">
-        <a href="#" class="text-gray-300 hover:text-white transition">Privacy Policy</a>
-        <a href="#" class="text-gray-300 hover:text-white transition">Terms of Service</a>
-        <a href="#" class="text-gray-300 hover:text-white transition">Support</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Scripts -->
-  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
-    document.addEventListener('contextmenu', (e) => {
-      const isMedia = ['img', 'image', 'video', 'svg', 'picture'].some(
-        tagName => tagName.localeCompare(e.target.tagName, undefined, { sensitivity: 'base' }) === 0,
-      );
-      isMedia && e.preventDefault();
-    });
-  </script>
-  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
-    window.canva_installFooter = (container) => {
-      if (!(container instanceof HTMLDivElement)) return;
-      fetch('_footer?lang=' + encodeURIComponent(navigator.language || 'en')).then(response => {
-        if (response.status !== 200) return;
-        response.text().then(footerStr => {
-          const div = document.createElement('div');
-          div.innerHTML = footerStr;
-          for (const child of [...div.children]) {
-            if (child.tagName.toLowerCase() !== 'script') container.append(child);
+    // Supabase-based storageRequest function with enhanced error handling
+    const storageRequest = async (endpoint, method = 'GET', data = null) => {
+      try {
+        if (method === 'GET') {
+          const { data: result, error } = await supabase
+            .from(endpoint)
+            .select('*');
+          if (error) {
+            console.error(`Supabase GET error for ${endpoint}:`, error);
+            throw new Error(`Failed to fetch from ${endpoint}: ${error.message} (Code: ${error.code})`);
           }
-        });
+          console.log(`Supabase Request: ${method} ${endpoint}`, result);
+          return result || [];
+        } else if (method === 'POST') {
+          const { data: result, error } = await supabase
+            .from(endpoint)
+            .insert(Array.isArray(data) ? data : [data])
+            .select();
+          if (error) {
+            console.error(`Supabase POST error for ${endpoint}:`, error);
+            throw new Error(`Failed to insert into ${endpoint}: ${error.message} (Code: ${error.code})`);
+          }
+          console.log(`Supabase Request: ${method} ${endpoint}`, result);
+          return result || [];
+        } else if (method === 'DELETE') {
+          const idToDelete = endpoint.split('/')[1]; // e.g., "TestCases/123" -> "123"
+          const { data: result, error } = await supabase
+            .from(endpoint.split('/')[0])
+            .delete()
+            .eq('id', idToDelete)
+            .select();
+          if (error) {
+            console.error(`Supabase DELETE error for ${endpoint}:`, error);
+            throw new Error(`Failed to delete from ${endpoint}: ${error.message} (Code: ${error.code})`);
+          }
+          console.log(`Supabase Request: ${method} ${endpoint}`, result);
+          return result || [];
+        } else if (method === 'CLEAR') {
+          const { data: result, error } = await supabase
+            .from(endpoint)
+            .delete()
+            .neq('id', 'non-existent-id'); // Deletes all rows
+          if (error) {
+            console.error(`Supabase CLEAR error for ${endpoint}:`, error);
+            throw new Error(`Failed to clear ${endpoint}: ${error.message} (Code: ${error.code})`);
+          }
+          console.log(`Supabase Request: CLEAR ${endpoint}`, result);
+          return result || [];
+        }
+      } catch (err) {
+        console.error(`Error in storageRequest (${endpoint}, ${method}):`, err);
+        // Fallback to localStorage if Supabase fails
+        if (method === 'GET') {
+          console.warn(`Falling back to localStorage for ${endpoint}. This means Supabase is not working as expected. Check the Supabase error above. Likely causes: (1) RLS policy missing - add a SELECT policy for ${endpoint} or disable RLS; (2) Table does not exist - create the ${endpoint} table; (3) Network/CORS issue - ensure the app is hosted on a proper web server (not file://).`);
+          return getLocalStorageData(endpoint);
+        } else if (method === 'POST') {
+          console.warn(`Falling back to localStorage for ${endpoint}. This means Supabase is not working as expected. Check the Supabase error above. Likely causes: (1) RLS policy missing - add an INSERT policy for ${endpoint} or disable RLS; (2) Schema mismatch - ensure the ${endpoint} table schema matches the data being inserted.`);
+          const currentData = getLocalStorageData(endpoint);
+          const updatedData = Array.isArray(data) ? [...currentData, ...data] : [...currentData, data];
+          setLocalStorageData(endpoint, updatedData);
+          return data;
+        } else if (method === 'DELETE') {
+          console.warn(`Falling back to localStorage for ${endpoint}. This means Supabase is not working as expected. Check the Supabase error above. Likely causes: (1) RLS policy missing - add a DELETE policy for ${endpoint} or disable RLS.`);
+          const currentData = getLocalStorageData(endpoint.split('/')[0]);
+          const updatedData = currentData.filter(item => item.id !== idToDelete);
+          setLocalStorageData(endpoint.split('/')[0], updatedData);
+          return [{ id: idToDelete }];
+        } else if (method === 'CLEAR') {
+          console.warn(`Falling back to localStorage for ${endpoint}. This means Supabase is not working as expected. Check the Supabase error above. Likely causes: (1) RLS policy missing - add a DELETE policy for ${endpoint} or disable RLS.`);
+          setLocalStorageData(endpoint, []);
+          return [];
+        }
+        throw err;
+      }
+    };
+
+    // Initialize Supabase tables with demo data
+    const initializeStorage = async () => {
+      try {
+        // Clear and initialize Users
+        console.log('Clearing Users table to ensure demo users are set up correctly.');
+        await storageRequest('Users', 'CLEAR'); // Clear the Users table
+        const demoUsers = [
+          { id: 'user-1', email: 'admin@admin.com', password: 'admin123', role: 'admin' },
+          { id: 'user-2', email: 'aswathi@demo.com', password: 'user123', role: 'user' }
+        ];
+        try {
+          await storageRequest('Users', 'POST', demoUsers);
+          const users = await storageRequest('Users');
+          console.log('Users after initialization:', users);
+          if (!users || users.length === 0) {
+            console.warn('Supabase returned no users after insertion. Falling back to localStorage.');
+            setLocalStorageData('Users', demoUsers);
+          }
+        } catch (insertErr) {
+          console.error('Failed to insert demo users into Supabase:', insertErr);
+          console.warn('Falling back to localStorage for Users.');
+          setLocalStorageData('Users', demoUsers);
+        }
+
+        // Initialize Groups (clear to ensure consistency)
+        await storageRequest('Groups', 'CLEAR');
+        let groups = await storageRequest('Groups');
+        if (!groups || groups.length === 0) {
+          console.log('No groups found in Supabase. Groups will be empty until created.');
+        }
+
+        // Initialize TestCases (clear to ensure consistency)
+        await storageRequest('TestCases', 'CLEAR');
+        let testCases = await storageRequest('TestCases');
+        if (!testCases || testCases.length === 0) {
+          console.log('No test cases found in Supabase. Test cases will be empty until created.');
+        }
+
+        // Initialize Reports (clear to ensure consistency)
+        await storageRequest('Reports', 'CLEAR');
+        let reports = await storageRequest('Reports');
+        if (!reports || reports.length === 0) {
+          console.log('No reports found in Supabase. Reports will be empty until generated.');
+        }
+      } catch (err) {
+        console.error('Failed to initialize Supabase data:', err);
+        // Ensure demo users are in localStorage if Supabase fails completely
+        const demoUsers = [
+          { id: 'user-1', email: 'admin@admin.com', password: 'admin123', role: 'admin' },
+          { id: 'user-2', email: 'aswathi@demo.com', password: 'user123', role: 'user' }
+        ];
+        setLocalStorageData('Users', demoUsers);
+        setLocalStorageData('Groups', []);
+        setLocalStorageData('TestCases', []);
+        setLocalStorageData('Reports', []);
+        console.warn('Initialized localStorage with demo data as a fallback due to Supabase failure.');
+      }
+    };
+
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
       });
     };
-  </script>
-  <script nonce="f8f923b9-67b5-4b0f-8d78-5e5e53824adf">
-    document.addEventListener('DOMContentLoaded', () => {
-      const footerContainer = document.getElementById('footer');
-      if (footerContainer) window.canva_installFooter(footerContainer);
 
-      // Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyDCkO5Mbnn5KLqaO84wuswsqeEN3bW7_s0",
-        authDomain: "qa-checklist-manager-c9e73.firebaseapp.com",
-        projectId: "qa-checklist-manager-c9e73",
-        storageBucket: "qa-checklist-manager-c9e73.firebasestorage.app",
-        messagingSenderId: "798419160073",
-        appId: "1:798419160073:web:595d5842c8eb6e9876fcd8"
+    const qaTips = [
+      "Automation Tip: Use Selenium WebDriver for cross-browser testing to catch UI bugs early.",
+      "Efficiency Tip: Prioritize test cases by risk impact to maximize QA coverage.",
+      "Best Practice: Write clear, atomic test steps to reduce ambiguity.",
+      "Automation Tip: Integrate API testing with Postman to validate backend logic.",
+      "Efficiency Tip: Use pairwise testing to reduce test case volume while maintaining coverage.",
+      "Best Practice: Document edge cases to ensure robust test scenarios.",
+      "Automation Tip: Leverage Cypress for fast, reliable end-to-end testing.",
+      "Efficiency Tip: Conduct daily stand-ups to align QA with dev progress."
+    ];
+
+    function FlashTicker() {
+      return React.createElement(
+        'div',
+        { className: 'bg-blue-900 text-white py-2 overflow-hidden' },
+        React.createElement(
+          'div',
+          { className: 'marquee' },
+          qaTips.map((tip, idx) =>
+            React.createElement('span', { key: idx, className: 'mx-4' }, tip)
+          )
+        )
+      );
+    }
+
+    function ErrorBoundary({ children }) {
+      const [hasError, setHasError] = useState(false);
+
+      useEffect(() => {
+        const handleError = (error, errorInfo) => {
+          console.error('ErrorBoundary caught an error:', error, errorInfo);
+          setHasError(true);
+        };
+        window.addEventListener('error', handleError);
+        window.addEventListener('unhandledrejection', (event) => {
+          console.error('Unhandled promise rejection:', event.reason);
+          setHasError(true);
+        });
+        return () => {
+          window.removeEventListener('error', handleError);
+          window.removeEventListener('unhandledrejection', handleError);
+        };
+      }, []);
+
+      if (hasError) {
+        return React.createElement(
+          'div',
+          { className: 'p-6 text-red-500' },
+          'Something went wrong. Please refresh the page and check the console for details.'
+        );
+      }
+      return children;
+    }
+
+    function App() {
+      const [user, setUser] = useState(null);
+      const [role, setRole] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState('');
+
+      useEffect(() => {
+        const loadData = async () => {
+          try {
+            await initializeStorage();
+            const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (storedUser.email) {
+              setUser(storedUser);
+              setRole(storedUser.role);
+            }
+          } catch (err) {
+            setError('Failed to initialize storage. Check console for details. Demo users have been set up in localStorage as a fallback.');
+            console.error('Failed to load data in App:', err.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+        loadData();
+      }, []);
+
+      if (loading) {
+        return React.createElement(
+          'div',
+          { className: 'flex items-center justify-center h-screen text-blue-600' },
+          'Loading...'
+        );
+      }
+
+      if (error) {
+        return React.createElement(
+          'div',
+          { className: 'flex items-center justify-center h-screen text-red-500' },
+          error
+        );
+      }
+
+      return React.createElement(
+        ErrorBoundary,
+        null,
+        React.createElement(
+          'div',
+          { className: 'min-h-screen' },
+          React.createElement(FlashTicker),
+          !user
+            ? React.createElement(Login, { setUser, setRole })
+            : role === 'admin'
+            ? React.createElement(AdminDashboard, { user })
+            : React.createElement(UserDashboard, { user })
+        )
+      );
+    }
+
+    function Login({ setUser, setRole }) {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const [loginMode, setLoginMode] = useState('user');
+
+      const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+          const users = await storageRequest('Users');
+          if (!users || users.length === 0) {
+            setError('No users found. Demo users should have been initialized. Check console for Supabase errors or reset session.');
+            return;
+          }
+          const foundUser = users.find(u => u.email === email && u.password === password);
+          if (foundUser) {
+            if ((loginMode === 'admin' && foundUser.role === 'admin') || (loginMode === 'user' && foundUser.role === 'user')) {
+              localStorage.setItem('currentUser', JSON.stringify(foundUser));
+              setUser(foundUser);
+              setRole(foundUser.role);
+            } else {
+              setError(`Role mismatch: You selected "${loginMode}" login, but this user is a "${foundUser.role}". Please select the correct login mode.`);
+            }
+          } else {
+            setError('Invalid email or password. Use admin@admin.com/admin123 for Admin, or aswathi@demo.com/user123 for User.');
+          }
+        } catch (err) {
+          setError(`Failed to process login: ${err.message}. Check console for details. Demo users are available in localStorage as a fallback.`);
+          console.error('Login error:', err.message);
+        }
       };
 
-      // Wait for Firebase to load
-      function initializeFirebase() {
-        if (typeof firebase === 'undefined') {
-          console.error("Firebase SDK not loaded yet. Retrying in 500ms...");
-          setTimeout(initializeFirebase, 500);
+      const handleResetStorage = async () => {
+        setError('');
+        try {
+          localStorage.removeItem('currentUser');
+          localStorage.removeItem('userSession');
+          localStorage.removeItem('Users'); // Clear localStorage Users to force re-initialization
+          await initializeStorage(); // Re-initialize to ensure demo users are set up
+          setError('Session data cleared and demo users re-initialized. Try logging in again.');
+        } catch (err) {
+          setError('Failed to reset session data. Check console for details.');
+          console.error('Reset session error:', err.message);
+        }
+      };
+
+      return React.createElement(
+        'div',
+        { className: 'flex items-center justify-center h-screen bg-gray-100' },
+        React.createElement(
+          'div',
+          { className: 'bg-white p-8 rounded-lg custom-shadow w-96' },
+          React.createElement('h2', { className: 'text-xl font-semibold mb-2 text-center text-gray-800' }, 'Test Case Manager'),
+          React.createElement('p', { className: 'text-sm text-gray-600 mb-6 text-center' }, 'Login to access the test case management system'),
+          error && React.createElement('p', { className: 'text-red-500 mb-4 text-center' }, error),
+          React.createElement(
+            'div',
+            { className: 'flex mb-6' },
+            React.createElement(
+              'button',
+              {
+                onClick: () => setLoginMode('user'),
+                className: `flex-1 py-2 font-medium ${loginMode === 'user' ? 'tab-active' : 'tab-inactive'}`
+              },
+              'User Login'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => setLoginMode('admin'),
+                className: `flex-1 py-2 font-medium ${loginMode === 'admin' ? 'tab-active' : 'tab-inactive'}`
+              },
+              'Admin Login'
+            )
+          ),
+          React.createElement(
+            'div',
+            null,
+            React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Email'),
+            React.createElement('input', {
+              type: 'email',
+              placeholder: 'Enter your email',
+              value: email,
+              onChange: (e) => setEmail(e.target.value),
+              className: 'w-full p-3 mb-4 border rounded-lg input-focus'
+            }),
+            React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Password'),
+            React.createElement('input', {
+              type: 'password',
+              placeholder: 'Enter your password',
+              value: password,
+              onChange: (e) => setPassword(e.target.value),
+              className: 'w-full p-3 mb-6 border rounded-lg input-focus'
+            }),
+            React.createElement(
+              'button',
+              {
+                onClick: handleLogin,
+                className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition'
+              },
+              `Login as ${loginMode.charAt(0).toUpperCase() + loginMode.slice(1)}`
+            ),
+            React.createElement(
+              'p',
+              { className: 'text-sm text-gray-500 mt-4 text-center' },
+              'Demo credentials: admin@admin.com/admin123 (Admin) or aswathi@demo.com/user123 (User)'
+            )
+          ),
+          React.createElement(
+            'button',
+            {
+              onClick: handleResetStorage,
+              className: 'w-full bg-gray-500 text-white p-3 mt-4 rounded-lg hover:bg-gray-600 transition'
+            },
+            'Reset Session'
+          )
+        )
+      );
+    }
+
+    function AdminDashboard({ user }) {
+      const [activeTab, setActiveTab] = useState('dashboard');
+
+      const handleLogout = () => {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userSession');
+        window.location.reload();
+      };
+
+      return React.createElement(
+        'div',
+        { className: 'flex min-h-screen' },
+        React.createElement(
+          'div',
+          { className: 'w-64 bg-white p-6 shadow-sm' },
+          React.createElement('h2', { className: 'text-xl font-semibold mb-6 text-gray-800' }, 'TestCase Manager'),
+          React.createElement(
+            'nav',
+            null,
+            React.createElement(
+              'button',
+              {
+                onClick: () => { console.log('Switching to dashboard'); setActiveTab('dashboard'); },
+                className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'dashboard' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
+              },
+              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 2L2 6v12h16V6l-8-4zm0 2.828l5.172 2.586V16H4.828V7.414L10 4.828z' })),
+              'Dashboard'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => { console.log('Switching to groups'); setActiveTab('groups'); },
+                className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'groups' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
+              },
+              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M4 4h12v12H4V4zm2 2v8h8V6H6z' })),
+              'Manage Groups'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => { console.log('Switching to testcases'); setActiveTab('testcases'); },
+                className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'testcases' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
+              },
+              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
+              'Manage Test Cases'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => { console.log('Switching to reports'); setActiveTab('reports'); },
+                className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'reports' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
+              },
+              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
+              'View Reports'
+            )
+          )
+        ),
+        React.createElement(
+          'div',
+          { className: 'flex-1 p-8' },
+          React.createElement(
+            'div',
+            { className: 'flex justify-between items-center mb-6' },
+            React.createElement('h1', { className: 'text-2xl font-bold text-gray-800' }, 'Test Case Management System'),
+            React.createElement(
+              'div',
+              { className: 'flex items-center space-x-3' },
+              React.createElement(
+                'div',
+                { className: 'flex items-center space-x-2' },
+                React.createElement(
+                  'div',
+                  { className: 'w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center' },
+                  React.createElement('svg', { className: 'w-5 h-5 text-gray-600', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 10a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z' }))
+                ),
+                React.createElement('span', { className: 'text-gray-700' }, user.role)
+              ),
+              React.createElement(
+                'button',
+                {
+                  onClick: handleLogout,
+                  className: 'text-gray-600 hover:text-gray-800 flex items-center'
+                },
+                React.createElement('svg', { className: 'w-5 h-5 mr-1', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M3 3h14v14H3V3zm10 6h4v2h-4v4l-4-4 4-4v4z' })),
+                'Logout'
+              )
+            )
+          ),
+          activeTab === 'dashboard' && React.createElement(AdminSummary),
+          activeTab === 'groups' && React.createElement(ManageGroups),
+          activeTab === 'testcases' && React.createElement(ManageTestCases),
+          activeTab === 'reports' && React.createElement(ViewReports)
+        )
+      );
+    }
+
+    function AdminSummary() {
+      const [groups, setGroups] = useState([]);
+      const [testCases, setTestCases] = useState([]);
+      const [reports, setReports] = useState([]);
+      const [error, setError] = useState('');
+
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const fetchedGroups = await storageRequest('Groups');
+            const fetchedTestCases = await storageRequest('TestCases');
+            const fetchedReports = await storageRequest('Reports');
+            setGroups(fetchedGroups || []);
+            setTestCases(fetchedTestCases || []);
+            setReports(fetchedReports || []);
+          } catch (err) {
+            setError('Failed to load summary data. Check console for details.');
+            console.error('Failed to load data in AdminSummary:', err.message);
+          }
+        };
+        fetchData();
+      }, []);
+
+      const completedCount = reports.reduce((sum, report) => sum + (Number(report.completedCount) || 0), 0);
+      const pendingCount = reports.reduce((sum, report) => sum + (Number(report.pendingCount) || 0), 0);
+      const total = completedCount + pendingCount;
+      const completionRate = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+      return React.createElement(
+        'div',
+        null,
+        React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'Admin Dashboard'),
+        error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
+        React.createElement('p', { className: 'text-gray-600 mb-6' }, 'Manage test groups, test cases, and view reports.'),
+        React.createElement(
+          'div',
+          { className: 'grid grid-cols-1 md:grid-cols-2 gap-6 mb-6' },
+          React.createElement(
+            'div',
+            { className: 'bg-white p-6 rounded-lg custom-shadow' },
+            React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Overall Test Completion'),
+            React.createElement('p', { className: 'text-4xl font-bold text-gray-800' }, completionRate, '%'),
+            React.createElement('p', { className: 'text-gray-600 mt-2' }, 'Completion Rate'),
+            React.createElement(
+              'div',
+              { className: 'flex mt-4 space-x-4' },
+              React.createElement(
+                'div',
+                { className: 'flex items-center' },
+                React.createElement('span', { className: 'w-4 h-4 bg-green-500 rounded-full mr-2' }),
+                React.createElement('span', { className: 'text-gray-600' }, 'Completed')
+              ),
+              React.createElement(
+                'div',
+                { className: 'flex items-center' },
+                React.createElement('span', { className: 'w-4 h-4 bg-yellow-500 rounded-full mr-2' }),
+                React.createElement('span', { className: 'text-gray-600' }, 'Pending')
+              )
+            )
+          ),
+          React.createElement(
+            'div',
+            { className: 'bg-white p-6 rounded-lg custom-shadow' },
+            React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Summary'),
+            React.createElement('p', { className: 'text-gray-600' }, 'Total Reports: ', React.createElement('span', { className: 'font-semibold' }, reports.length)),
+            React.createElement('p', { className: 'text-gray-600' }, 'Total Test Cases: ', React.createElement('span', { className: 'font-semibold' }, testCases.length)),
+            React.createElement('p', { className: 'text-gray-600' }, 'Total Groups: ', React.createElement('span', { className: 'font-semibold' }, groups.length))
+          )
+        ),
+        React.createElement(
+          'div',
+          { className: 'bg-white p-6 rounded-lg custom-shadow' },
+          React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Recent Reports'),
+          reports.length > 0
+            ? reports.slice(0, 3).map(report =>
+                React.createElement(
+                  'div',
+                  { key: report.id, className: 'mt-4 p-4 bg-gray-50 rounded-lg' },
+                  React.createElement('p', { className: 'text-gray-800' }, 'User: ', report.userName || 'Unknown'),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Project: ', report.projectName || 'N/A', ', Phase: ', report.phase || 'N/A'),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Completed: ', report.completedCount || 0, ', Pending: ', report.pendingCount || 0)
+                )
+              )
+            : React.createElement('p', { className: 'text-gray-600' }, 'No reports available yet.')
+        )
+      );
+    }
+
+    function ManageGroups() {
+      const [groups, setGroups] = useState([]);
+      const [showPopup, setShowPopup] = useState(false);
+      const [groupName, setGroupName] = useState('');
+      const [description, setDescription] = useState('');
+      const [phase, setPhase] = useState('');
+      const [error, setError] = useState('');
+
+      useEffect(() => {
+        const fetchGroups = async () => {
+          try {
+            const storedGroups = await storageRequest('Groups');
+            console.log('Fetched groups:', storedGroups);
+            setGroups(storedGroups || []);
+          } catch (err) {
+            setError('Failed to load groups from storage. Check console for details.');
+            console.error('Error in ManageGroups useEffect:', err.message);
+          }
+        };
+        fetchGroups();
+      }, []);
+
+      const handleCreateGroup = async () => {
+        if (!groupName || !phase) {
+          setError('Group name and phase are required');
+          return;
+        }
+        try {
+          const newGroup = { 
+            id: generateUUID(), 
+            name: groupName, 
+            description: description || null, 
+            phase 
+          };
+          await storageRequest('Groups', 'POST', [newGroup]);
+          const updatedGroups = await storageRequest('Groups');
+          setGroups(updatedGroups || []);
+          setGroupName('');
+          setDescription('');
+          setPhase('');
+          setShowPopup(false);
+          setError('');
+        } catch (err) {
+          setError(`Failed to create group: ${err.message}. Check console for details. If the error code is 403, check Supabase RLS policies for the Groups table.`);
+          console.error('Error in handleCreateGroup:', err);
+        }
+      };
+
+      return React.createElement(
+        'div',
+        null,
+        React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'Test Groups'),
+        error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
+        React.createElement(
+          'button',
+          {
+            onClick: () => setShowPopup(true),
+            className: 'bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition mb-6 flex items-center'
+          },
+          React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 3v14m-7-7h14' })),
+          'Create Group'
+        ),
+        groups.length > 0
+          ? React.createElement(
+              'div',
+              { className: 'space-y-4' },
+              groups.map(group =>
+                React.createElement(
+                  'div',
+                  { key: group.id, className: 'bg-white p-4 rounded-lg custom-shadow card-hover' },
+                  React.createElement('h3', { className: 'font-semibold text-gray-800' }, group.name),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Description: ', group.description || 'None'),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Phase: ', group.phase)
+                )
+              )
+            )
+          : React.createElement('p', { className: 'text-gray-600' }, 'No groups have been created yet. Click "Create Group" to add one.'),
+        showPopup &&
+          React.createElement(
+            'div',
+            { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50' },
+            React.createElement(
+              'div',
+              { className: 'bg-white p-6 rounded-lg custom-shadow w-96' },
+              React.createElement(
+                'div',
+                { className: 'flex justify-between items-center mb-4' },
+                React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Create New Group'),
+                React.createElement(
+                  'button',
+                  { onClick: () => setShowPopup(false), className: 'text-gray-600 hover:text-gray-800' },
+                  React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
+                )
+              ),
+              React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Fill the details to create a new test group.'),
+              React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Group Name'),
+              React.createElement('input', {
+                type: 'text',
+                placeholder: 'Enter group name',
+                value: groupName,
+                onChange: (e) => setGroupName(e.target.value),
+                className: 'w-full p-3 border rounded-lg input-focus mb-4'
+              }),
+              React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Description'),
+              React.createElement('textarea', {
+                placeholder: 'Enter group description',
+                value: description,
+                onChange: (e) => setDescription(e.target.value),
+                className: 'w-full p-3 border rounded-lg input-focus mb-4 h-24'
+              }),
+              React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Phase'),
+              React.createElement(
+                'select',
+                {
+                  value: phase,
+                  onChange: (e) => setPhase(e.target.value),
+                  className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                },
+                React.createElement('option', { value: '' }, 'Select a phase'),
+                React.createElement('option', { value: 'HTML Comparison' }, 'HTML Comparison'),
+                React.createElement('option', { value: 'After Live' }, 'After Live'),
+                React.createElement('option', { value: 'Dev Test' }, 'Dev Test'),
+                React.createElement('option', { value: 'Dev ReTest' }, 'Dev ReTest'),
+                React.createElement('option', { value: 'Before Live' }, 'Before Live')
+              ),
+              React.createElement(
+                'button',
+                {
+                  onClick: handleCreateGroup,
+                  className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition'
+                },
+                'Create Group'
+              )
+            )
+          )
+      );
+    }
+
+    function ManageTestCases() {
+      const [testCases, setTestCases] = useState([]);
+      const [groups, setGroups] = useState([]);
+      const [title, setTitle] = useState('');
+      const [steps, setSteps] = useState('');
+      const [selectedGroup, setSelectedGroup] = useState('');
+      const [error, setError] = useState('');
+
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const storedTestCases = await storageRequest('TestCases');
+            const storedGroups = await storageRequest('Groups');
+            console.log('Fetched test cases:', storedTestCases);
+            console.log('Fetched groups in ManageTestCases:', storedGroups);
+            setTestCases(storedTestCases || []);
+            setGroups(storedGroups || []);
+          } catch (err) {
+            setError('Failed to load test cases or groups from storage. Check console for details.');
+            console.error('Error in ManageTestCases useEffect:', err.message);
+          }
+        };
+        fetchData();
+      }, []);
+
+      const handleCreateTestCase = async () => {
+        if (!title || !steps || !selectedGroup) {
+          setError('All fields are required');
+          return;
+        }
+        try {
+          const newTestCase = {
+            id: generateUUID(),
+            title,
+            steps: steps.split('\n').filter(step => step.trim()).join('\n'),
+            groupId: selectedGroup,
+            createdAt: new Date().toISOString()
+          };
+          await storageRequest('TestCases', 'POST', [newTestCase]);
+          const updatedTestCases = await storageRequest('TestCases');
+          setTestCases(updatedTestCases || []);
+          setTitle('');
+          setSteps('');
+          setSelectedGroup('');
+          setError('');
+        } catch (err) {
+          setError(`Failed to create test case: ${err.message}. Check console for details.`);
+          console.error('Error in handleCreateTestCase:', err.message);
+        }
+      };
+
+      const handleDuplicate = async (testCase) => {
+        try {
+          const newTestCase = { ...testCase, id: generateUUID(), createdAt: new Date().toISOString() };
+          await storageRequest('TestCases', 'POST', [newTestCase]);
+          const updatedTestCases = await storageRequest('TestCases');
+          setTestCases(updatedTestCases || []);
+          setError('');
+        } catch (err) {
+          setError(`Failed to duplicate test case: ${err.message}. Check console for details.`);
+          console.error('Error in handleDuplicate:', err.message);
+        }
+      };
+
+      const handleDelete = async (id) => {
+        try {
+          await storageRequest(`TestCases/${id}`, 'DELETE');
+          const updatedTestCases = await storageRequest('TestCases');
+          setTestCases(updatedTestCases || []);
+          setError('');
+        } catch (err) {
+          setError(`Failed to delete test case: ${err.message}. Check console for details.`);
+          console.error('Error in handleDelete:', err.message);
+        }
+      };
+
+      return React.createElement(
+        'div',
+        null,
+        React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'Manage Test Cases'),
+        error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
+        React.createElement(
+          'div',
+          { className: 'bg-white p-6 rounded-lg custom-shadow mb-6' },
+          React.createElement(
+            'div',
+            { className: 'space-y-4' },
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Test Case Title'),
+              React.createElement('input', {
+                type: 'text',
+                placeholder: 'Enter test case title',
+                value: title,
+                onChange: (e) => setTitle(e.target.value),
+                className: 'w-full p-3 border rounded-lg input-focus'
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Test Steps'),
+              React.createElement('textarea', {
+                placeholder: 'Enter test steps (one per line)',
+                value: steps,
+                onChange: (e) => setSteps(e.target.value),
+                className: 'w-full p-3 border rounded-lg input-focus h-32'
+              })
+            ),
+            React.createElement(
+              'div',
+              null,
+              React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Select Group'),
+              React.createElement(
+                'select',
+                {
+                  value: selectedGroup,
+                  onChange: (e) => setSelectedGroup(e.target.value),
+                  className: 'w-full p-3 border rounded-lg input-focus'
+                },
+                React.createElement('option', { value: '' }, 'Select a group'),
+                groups.map(group =>
+                  React.createElement('option', { key: group.id, value: group.id }, group.name)
+                )
+              )
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: handleCreateTestCase,
+                className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition'
+              },
+              'Create Test Case'
+            )
+          )
+        ),
+        testCases.length > 0
+          ? React.createElement(
+              'div',
+              { className: 'space-y-4' },
+              testCases.map(tc =>
+                React.createElement(
+                  'div',
+                  { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
+                  React.createElement(
+                    'div',
+                    { className: 'flex justify-between items-start' },
+                    React.createElement(
+                      'div',
+                      null,
+                      React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
+                      React.createElement('p', { className: 'text-gray-600' }, 'Group: ', groups.find(g => g.id === tc.groupId)?.name || 'Unknown'),
+                      React.createElement(
+                        'ul',
+                        { className: 'ml-4 list-disc text-gray-700' },
+                        tc.steps.split('\n').map((step, idx) =>
+                          React.createElement('li', { key: idx }, step)
+                        )
+                      )
+                    ),
+                    React.createElement(
+                      'div',
+                      { className: 'flex space-x-2' },
+                      React.createElement(
+                        'button',
+                        {
+                          onClick: () => handleDuplicate(tc),
+                          className: 'bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600'
+                        },
+                        'Duplicate'
+                      ),
+                      React.createElement(
+                        'button',
+                        {
+                          onClick: () => handleDelete(tc.id),
+                          className: 'bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600'
+                        },
+                        'Delete'
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          : React.createElement('p', { className: 'text-gray-600' }, 'No test cases have been created yet. Use the form above to add one.')
+      );
+    }
+
+    function ViewReports() {
+      const [reports, setReports] = useState([]);
+      const [error, setError] = useState('');
+      const [chartError, setChartError] = useState('');
+
+      useEffect(() => {
+        const fetchReports = async () => {
+          try {
+            const storedReports = await storageRequest('Reports');
+            console.log('Fetched reports:', storedReports);
+            setReports(storedReports || []);
+          } catch (err) {
+            setError('Failed to load reports from storage. Check console for details.');
+            console.error('Error in ViewReports useEffect:', err.message);
+          }
+        };
+        fetchReports();
+      }, []);
+
+      useEffect(() => {
+        if (!reports.length) return;
+
+        const ctx = document.getElementById('reportsChart')?.getContext('2d');
+        if (!ctx) {
+          setChartError('Failed to initialize chart: Canvas element not found');
+          console.error('Chart canvas not found');
           return;
         }
 
-        // Initialize Firebase
+        if (!Chart) {
+          setChartError('Chart.js library failed to load');
+          console.error('Chart.js not available');
+          return;
+        }
+
         try {
-          firebase.initializeApp(firebaseConfig);
-          console.log("Firebase initialized successfully");
-        } catch (error) {
-          console.error("Firebase initialization failed:", error);
-          alert("Failed to initialize Firebase: " + error.message);
-        }
-
-        // Initialize Firestore and Auth
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-
-        // Elements
-        const userInfo = document.getElementById('user-info');
-        const authButton = document.getElementById('auth-button');
-        const adminDashboard = document.getElementById('admin-dashboard');
-        const userView = document.getElementById('user-view');
-        const testCasesView = document.getElementById('test-cases-view');
-        const viewReportsBtn = document.getElementById('view-reports-btn');
-
-        // Check initial login state
-        let currentUser = null;
-        let currentRole = null;
-
-        function updateViewBasedOnRole() {
-          console.log("Updating view for role:", currentRole);
-          if (currentRole === 'admin') {
-            adminDashboard.classList.remove('hidden');
-            viewReportsBtn.classList.remove('hidden');
-            userView.classList.add('hidden');
-            testCasesView.classList.add('hidden');
-          } else if (currentRole === 'user') {
-            adminDashboard.classList.add('hidden');
-            userView.classList.remove('hidden');
-            testCasesView.classList.add('hidden');
-            loadUserTestGroups();
-          } else {
-            adminDashboard.classList.add('hidden');
-            userView.classList.add('hidden');
-            testCasesView.classList.add('hidden');
+          if (window.reportsChart) {
+            window.reportsChart.destroy();
           }
-        }
 
-        // Load test groups for admin
-        function loadTestGroups() {
-          const testGroupsList = document.getElementById('test-groups-list');
-          if (!testGroupsList) return;
-          testGroupsList.innerHTML = '';
-          db.collection('testGroups').get().then((snapshot) => {
-            const groups = [];
-            snapshot.forEach(doc => groups.push(doc.data()));
-            if (groups.length === 0) {
-              testGroupsList.innerHTML = '<p>No test groups available.</p>';
-              return;
-            }
-            groups.forEach(group => {
-              const groupCard = document.createElement('div');
-              groupCard.className = 'test-group-card';
-              groupCard.setAttribute('data-id', group.id);
-              groupCard.innerHTML = `
-                <div class="title">${group.name}</div>
-                <div class="description">${group.description}</div>
-                <div class="actions">
-                  <button class="edit-group-btn text-blue-600 hover:text-blue-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                  </button>
-                  <button class="delete-group-btn text-red-600 hover:text-red-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
-                  </button>
-                </div>
-              `;
-              testGroupsList.appendChild(groupCard);
-
-              const editBtn = groupCard.querySelector('.edit-group-btn');
-              const deleteBtn = groupCard.querySelector('.delete-group-btn');
-
-              editBtn.addEventListener('click', () => {
-                if (currentRole !== 'admin') {
-                  alert('You must be logged in as admin to perform this action.');
-                  return;
-                }
-                const groupId = groupCard.getAttribute('data-id');
-                db.collection('testGroups').doc(groupId).get().then(doc => {
-                  const group = doc.data();
-                  openGroupModal('Edit Test Group', group);
-                });
-              });
-
-              deleteBtn.addEventListener('click', () => {
-                if (currentRole !== 'admin') {
-                  alert('You must be logged in as admin to perform this action.');
-                  return;
-                }
-                const groupId = groupCard.getAttribute('data-id');
-                if (confirm('Are you sure you want to delete this test group?')) {
-                  db.collection('testGroups').doc(groupId).delete().then(() => {
-                    db.collection('testCases').where('groupId', '==', parseInt(groupId)).get().then(snapshot => {
-                      const batch = db.batch();
-                      snapshot.forEach(doc => batch.delete(doc.ref));
-                      batch.commit().then(() => loadTestGroups());
-                    });
-                  });
-                }
-              });
-            });
-          }).catch(error => {
-            console.error('Error loading test groups:', error);
-            testGroupsList.innerHTML = '<p>Error loading test groups.</p>';
-          });
-        }
-
-        // Load test cases for admin
-        function loadTestCases() {
-          const testCasesList = document.getElementById('test-cases-list');
-          if (!testCasesList) return;
-          testCasesList.innerHTML = '';
-          db.collection('testGroups').get().then(groupSnapshot => {
-            const groups = [];
-            groupSnapshot.forEach(doc => groups.push(doc.data()));
-            db.collection('testCases').get().then(snapshot => {
-              const testCases = [];
-              snapshot.forEach(doc => testCases.push(doc.data()));
-              if (testCases.length === 0) {
-                testCasesList.innerHTML = '<p>No test cases available.</p>';
-                return;
-              }
-              testCases.forEach(tc => {
-                const group = groups.find(g => g.id == tc.groupId);
-                const tcCard = document.createElement('div');
-                tcCard.className = 'test-case-card';
-                tcCard.setAttribute('data-id', tc.id);
-                let stepsHtml = '';
-                if (tc.steps && tc.steps.length > 0) {
-                  stepsHtml = '<div class="test-steps">';
-                  tc.steps.forEach(step => {
-                    stepsHtml += `<div class="test-step">${step}</div>`;
-                  });
-                  stepsHtml += '</div>';
-                }
-                tcCard.innerHTML = `
-                  <div class="test-case-header">
-                    <div class="test-case-title">${tc.name}</div>
-                    <div class="actions">
-                      <button class="delete-test-case-btn text-red-600 hover:text-red-800">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4M9 7v12m6-12v12"></path></svg>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="description">Group: ${group ? group.name : 'Unknown'}</div>
-                  ${stepsHtml}
-                `;
-                testCasesList.appendChild(tcCard);
-
-                const deleteBtn = tcCard.querySelector('.delete-test-case-btn');
-                deleteBtn.addEventListener('click', () => {
-                  if (currentRole !== 'admin') {
-                    alert('You must be logged in as admin to perform this action.');
-                    return;
-                  }
-                  const tcId = tcCard.getAttribute('data-id');
-                  if (confirm('Are you sure you want to delete this test case?')) {
-                    db.collection('testCases').doc(tcId).delete().then(() => loadTestCases());
-                  }
-                });
-              });
-            }).catch(error => {
-              console.error('Error loading test cases:', error);
-              testCasesList.innerHTML = '<p>Error loading test cases.</p>';
-            });
-          }).catch(error => {
-            console.error('Error loading groups for test cases:', error);
-            testCasesList.innerHTML = '<p>Error loading test cases.</p>';
-          });
-        }
-
-        // Load reports for admin
-        function loadReports() {
-          const reportsList = document.getElementById('reports-list');
-          if (!reportsList) return;
-          reportsList.innerHTML = '';
-          db.collection('reports').orderBy('timestamp', 'desc').get().then(snapshot => {
-            const reports = [];
-            snapshot.forEach(doc => {
-              if (doc.id !== 'init') reports.push({ id: doc.id, ...doc.data() });
-            });
-            if (reports.length === 0) {
-              reportsList.innerHTML = '<p>No reports available.</p>';
-              return;
-            }
-            reports.forEach((report, index) => {
-              const reportCard = document.createElement('div');
-              reportCard.className = 'completion-box';
-              reportCard.setAttribute('data-index', index);
-              const canvasId = `report-chart-${index}`;
-              reportCard.innerHTML = `
-                <h4>Project: ${report.projectName}</h4>
-                <p>User: ${report.userName}</p>
-                <p>Group: ${report.groupName}</p>
-                <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
-                <div class="graph-container">
-                  <canvas id="${canvasId}"></canvas>
-                </div>
-              `;
-              reportsList.appendChild(reportCard);
-
-              const ctx = document.getElementById(canvasId).getContext('2d');
-              new Chart(ctx, {
-                type: 'bar',
-                data: {
-                  labels: ['Completed', 'Remaining'],
-                  datasets: [{
-                    label: 'Test Cases',
-                    data: [report.completedCount, report.totalCount - report.completedCount],
-                    backgroundColor: ['#10b981', '#e5e7eb'],
-                    borderColor: ['#10b981', '#e5e7eb'],
-                    borderWidth: 1
-                  }]
+          window.reportsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: reports.map(r => r.userName || 'Unknown'),
+              datasets: [
+                {
+                  label: 'Completed Test Cases',
+                  data: reports.map(r => Number(r.completedCount) || 0),
+                  backgroundColor: '#10b981',
                 },
-                options: {
-                  indexAxis: 'y',
-                  scales: {
-                    x: {
-                      beginAtZero: true,
-                      max: report.totalCount
-                    }
-                  },
-                  plugins: {
-                    legend: {
-                      display: false
-                    }
-                  }
+                {
+                  label: 'Pending Test Cases',
+                  data: reports.map(r => Number(r.pendingCount) || 0),
+                  backgroundColor: '#f59e0b',
                 }
-              });
-
-              reportCard.addEventListener('click', () => {
-                openReportDetailsModal(report, index);
-              });
-            });
-          }).catch(error => {
-            console.error('Error loading reports:', error);
-            reportsList.innerHTML = '<p>Error loading reports.</p>';
-          });
-        }
-
-        // Open Report Details Modal
-        const reportDetailsModal = document.getElementById('report-details-modal');
-        const reportDetailsContent = document.getElementById('report-details-content');
-        const closeReportDetailsBtn = document.getElementById('close-report-details-btn');
-        const reportDetailsModalClose = reportDetailsModal.querySelector('.modal-close');
-
-        function openReportDetailsModal(report, index) {
-          reportDetailsContent.innerHTML = `
-            <h4>Project: ${report.projectName}</h4>
-            <p>User: ${report.userName}</p>
-            <p>Group: ${report.groupName}</p>
-            <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
-          `;
-
-          db.collection('testCases').where('groupId', '==', report.groupId).get().then(snapshot => {
-            const groupTestCases = [];
-            snapshot.forEach(doc => groupTestCases.push(doc.data()));
-            const passedTestCases = groupTestCases.filter(tc => report.completedTestCases.includes(tc.id));
-            const pendingTestCases = groupTestCases.filter(tc => !report.completedTestCases.includes(tc.id));
-
-            const passedSection = document.createElement('div');
-            passedSection.className = 'status-section';
-            passedSection.innerHTML = `<h5 class="status-passed">Passed Test Cases (${passedTestCases.length})</h5>`;
-            if (passedTestCases.length === 0) {
-              passedSection.innerHTML += '<p>No test cases passed.</p>';
-            } else {
-              passedTestCases.forEach(tc => {
-                const item = document.createElement('div');
-                item.className = 'test-case-item';
-                item.innerHTML = `<div>${tc.name}</div>`;
-                passedSection.appendChild(item);
-              });
-            }
-            reportDetailsContent.appendChild(passedSection);
-
-            const pendingSection = document.createElement('div');
-            pendingSection.className = 'status-section';
-            pendingSection.innerHTML = `<h5 class="status-pending">Pending Test Cases (${pendingTestCases.length})</h5>`;
-            if (pendingTestCases.length === 0) {
-              pendingSection.innerHTML += '<p>No test cases pending.</p>';
-            } else {
-              pendingTestCases.forEach(tc => {
-                const item = document.createElement('div');
-                item.className = 'test-case-item';
-                item.innerHTML = `<div>${tc.name}</div>`;
-                pendingSection.appendChild(item);
-              });
-            }
-            reportDetailsContent.appendChild(pendingSection);
-
-            reportDetailsModal.style.display = 'flex';
-          }).catch(error => {
-            console.error('Error loading test cases for report:', error);
-            reportDetailsContent.innerHTML += '<p>Error loading test case details.</p>';
-          });
-        }
-
-        function closeReportDetailsModal() {
-          reportDetailsModal.style.display = 'none';
-          reportDetailsContent.innerHTML = '';
-        }
-
-        closeReportDetailsBtn.addEventListener('click', closeReportDetailsModal);
-        reportDetailsModalClose.addEventListener('click', closeReportDetailsModal);
-        reportDetailsModal.addEventListener('click', (e) => {
-          if (e.target === reportDetailsModal) closeReportDetailsModal();
-        });
-
-        // Load test groups for user
-        function loadUserTestGroups() {
-          const userTestGroupsList = document.getElementById('user-test-groups-list');
-          if (!userTestGroupsList) return;
-          userTestGroupsList.innerHTML = '';
-          db.collection('testGroups').get().then(snapshot => {
-            const groups = [];
-            snapshot.forEach(doc => groups.push(doc.data()));
-            if (groups.length === 0) {
-              userTestGroupsList.innerHTML = '<p>No test groups available.</p>';
-              return;
-            }
-            groups.forEach(group => {
-              const groupCard = document.createElement('div');
-              groupCard.className = 'test-group-card';
-              groupCard.setAttribute('data-id', group.id);
-              groupCard.innerHTML = `<div class="title">${group.name}</div>`;
-              groupCard.addEventListener('click', () => {
-                currentGroupId = group.id;
-                currentGroupName = group.name;
-                openProjectDetailsModal();
-              });
-              userTestGroupsList.appendChild(groupCard);
-            });
-          }).catch(error => {
-            console.error('Error loading user test groups:', error);
-            userTestGroupsList.innerHTML = '<p>Error loading test groups.</p>';
-          });
-        }
-
-        // Group Modal functionality
-        const groupModal = document.getElementById('group-modal');
-        const groupModalTitle = document.getElementById('group-modal-title');
-        const groupNameInput = document.getElementById('group-name');
-        const groupDescriptionInput = document.getElementById('group-description');
-        const saveGroupBtn = document.getElementById('save-group-btn');
-        const groupModalClose = groupModal.querySelector('.modal-close');
-        let editingGroupId = null;
-
-        function openGroupModal(title, group = null) {
-          groupModalTitle.textContent = title;
-          groupNameInput.value = group ? group.name : '';
-          groupDescriptionInput.value = group ? group.description : '';
-          editingGroupId = group ? group.id : null;
-          groupModal.style.display = 'flex';
-        }
-
-        function closeGroupModal() {
-          groupModal.style.display = 'none';
-          groupNameInput.value = '';
-          groupDescriptionInput.value = '';
-          editingGroupId = null;
-        }
-
-        groupModalClose.addEventListener('click', closeGroupModal);
-        groupModal.addEventListener('click', (e) => {
-          if (e.target === groupModal) closeGroupModal();
-        });
-
-        saveGroupBtn.addEventListener('click', () => {
-          if (currentRole !== 'admin') {
-            alert('You must be logged in as admin to perform this action.');
-            return;
-          }
-          const name = groupNameInput.value.trim();
-          const description = groupDescriptionInput.value.trim();
-          if (!name || !description) {
-            alert('Please fill in all fields.');
-            return;
-          }
-
-          if (editingGroupId) {
-            db.collection('testGroups').doc(editingGroupId).update({
-              name,
-              description
-            }).then(() => {
-              loadTestGroups();
-              loadUserTestGroups();
-              closeGroupModal();
-            }).catch(error => {
-              console.error('Error updating test group:', error);
-              alert('Error updating test group.');
-            });
-          } else {
-            db.collection('testGroups').get().then(snapshot => {
-              const groups = [];
-              snapshot.forEach(doc => groups.push(doc.data()));
-              const newGroup = {
-                id: groups.length ? Math.max(...groups.map(g => g.id)) + 1 : 1,
-                name,
-                description
-              };
-              db.collection('testGroups').doc(newGroup.id.toString()).set(newGroup).then(() => {
-                loadTestGroups();
-                loadUserTestGroups();
-                closeGroupModal();
-              }).catch(error => {
-                console.error('Error adding test group:', error);
-                alert('Error adding test group.');
-              });
-            }).catch(error => {
-              console.error('Error fetching test groups for new ID:', error);
-              alert('Error adding test group.');
-            });
-          }
-        });
-
-        // Test Case Modal functionality
-        const testCaseModal = document.getElementById('test-case-modal');
-        const testCaseGroupSelect = document.getElementById('test-case-group');
-        const testCaseNameInput = document.getElementById('test-case-name');
-        const testCaseStepsInput = document.getElementById('test-case-steps');
-        const saveTestCaseBtn = document.getElementById('save-test-case-btn');
-        const testCaseModalClose = testCaseModal.querySelector('.modal-close');
-
-        function openTestCaseModal() {
-          testCaseGroupSelect.innerHTML = '';
-          db.collection('testGroups').get().then(snapshot => {
-            const groups = [];
-            snapshot.forEach(doc => groups.push(doc.data()));
-            groups.forEach(group => {
-              const option = document.createElement('option');
-              option.value = group.id;
-              option.textContent = group.name;
-              testCaseGroupSelect.appendChild(option);
-            });
-          }).catch(error => {
-            console.error('Error loading groups for test case modal:', error);
-            testCaseGroupSelect.innerHTML = '<option value="">Error loading groups</option>';
-          });
-          testCaseNameInput.value = '';
-          testCaseStepsInput.value = '';
-          testCaseModal.style.display = 'flex';
-        }
-
-        function closeTestCaseModal() {
-          testCaseModal.style.display = 'none';
-          testCaseNameInput.value = '';
-          testCaseStepsInput.value = '';
-        }
-
-        testCaseModalClose.addEventListener('click', closeTestCaseModal);
-        testCaseModal.addEventListener('click', (e) => {
-          if (e.target === testCaseModal) closeTestCaseModal();
-        });
-
-        saveTestCaseBtn.addEventListener('click', () => {
-          if (currentRole !== 'admin') {
-            alert('You must be logged in as admin to perform this action.');
-            return;
-          }
-          const groupId = parseInt(testCaseGroupSelect.value);
-          const name = testCaseNameInput.value.trim();
-          const steps = testCaseStepsInput.value.trim().split('\n').filter(step => step.trim() !== '');
-          if (!groupId || !name || steps.length === 0) {
-            alert('Please fill in all fields, including at least one test step.');
-            return;
-          }
-
-          db.collection('testCases').get().then(snapshot => {
-            const testCases = [];
-            snapshot.forEach(doc => testCases.push(doc.data()));
-            const newTestCase = {
-              id: testCases.length ? Math.max(...testCases.map(tc => tc.id)) + 1 : 1,
-              groupId,
-              name,
-              steps
-            };
-            db.collection('testCases').doc(newTestCase.id.toString()).set(newTestCase).then(() => {
-              loadTestCases();
-              closeTestCaseModal();
-            }).catch(error => {
-              console.error('Error adding test case:', error);
-              alert('Error adding test case.');
-            });
-          }).catch(error => {
-            console.error('Error fetching test cases for new ID:', error);
-            alert('Error adding test case.');
-          });
-        });
-
-        // Login Modal functionality
-        const loginModal = document.getElementById('login-modal');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const loginSubmitBtn = document.getElementById('login-submit-btn');
-        const loginModalClose = loginModal.querySelector('.modal-close');
-
-        function openLoginModal() {
-          console.log('Opening login modal'); // Debug
-          loginModal.style.display = 'flex !important';
-          console.log('Modal display style:', loginModal.style.display); // Debug
-        }
-
-        function closeLoginModal() {
-          loginModal.style.display = 'none';
-          emailInput.value = '';
-          passwordInput.value = '';
-        }
-
-        loginModalClose.addEventListener('click', closeLoginModal);
-        loginModal.addEventListener('click', (e) => {
-          if (e.target === loginModal) closeLoginModal();
-        });
-
-        loginSubmitBtn.addEventListener('click', () => {
-          const email = emailInput.value.trim();
-          const password = passwordInput.value.trim();
-
-          if (!email || !password) {
-            alert('Please enter both email and password.');
-            return;
-          }
-
-          console.log('Attempting login with email:', email);
-
-          auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-              const user = userCredential.user;
-              console.log('Login successful, UID:', user.uid);
-              alert('Login successful! UID: ' + user.uid);
-
-              // Fetch user role from Firestore
-              db.collection('users').doc(user.uid).get()
-                .then((doc) => {
-                  if (doc.exists) {
-                    const userData = doc.data();
-                    console.log('User data from Firestore:', userData);
-                    alert('Role fetched from Firestore: ' + userData.role);
-
-                    currentUser = email.split('@')[0]; // Extract username from email
-                    currentRole = userData.role;
-                    localStorage.setItem('userSession', JSON.stringify({ email, role: currentRole }));
-                    userInfo.textContent = `User: ${currentUser} (${currentRole})`;
-                    authButton.textContent = 'Logout';
-                    authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-                    authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                    updateViewBasedOnRole();
-                    closeLoginModal();
-                  } else {
-                    console.error('User role not found in Firestore');
-                    alert('User role not found in database.');
-                    auth.signOut();
-                  }
-                })
-                .catch((error) => {
-                  console.error('Error fetching user role from Firestore:', error);
-                  alert('Error fetching user role: ' + error.message);
-                  auth.signOut();
-                });
-            })
-            .catch((error) => {
-              console.error('Login error:', error);
-              let errorMessage = 'Invalid credentials.';
-              if (error.code === 'auth/user-not-found') {
-                errorMessage = 'User not found. Please check your email.';
-              } else if (error.code === 'auth/wrong-password') {
-                errorMessage = 'Incorrect password. Please try again.';
-              } else if (error.code === 'auth/invalid-email') {
-                errorMessage = 'Invalid email format.';
-              } else if (error.code === 'auth/network-request-failed') {
-                errorMessage = 'Network error. Please check your internet connection.';
-              }
-              alert(errorMessage);
-            });
-        });
-
-        // Project Details Modal for Users
-        let currentGroupId = null;
-        let currentGroupName = null;
-        let currentProject = null;
-        const projectDetailsModal = document.getElementById('project-details-modal');
-        const projectNameInput = document.getElementById('project-name');
-        const userNameInput = document.getElementById('user-name');
-        const submitProjectDetailsBtn = document.getElementById('submit-project-details-btn');
-        const projectDetailsModalClose = projectDetailsModal.querySelector('.modal-close');
-
-        function openProjectDetailsModal() {
-          projectDetailsModal.style.display = 'flex';
-        }
-
-        function closeProjectDetailsModal() {
-          projectDetailsModal.style.display = 'none';
-          projectNameInput.value = '';
-          userNameInput.value = '';
-        }
-
-        projectDetailsModalClose.addEventListener('click', closeProjectDetailsModal);
-        projectDetailsModal.addEventListener('click', (e) => {
-          if (e.target === projectDetailsModal) closeProjectDetailsModal();
-        });
-
-        submitProjectDetailsBtn.addEventListener('click', () => {
-          const projectName = projectNameInput.value.trim();
-          const userName = userNameInput.value.trim();
-          if (!projectName || !userName) {
-            alert('Please fill in all fields.');
-            return;
-          }
-          currentProject = { projectName, userName, groupId: currentGroupId, completedTestCases: [] };
-          closeProjectDetailsModal();
-          showTestCasesPopup();
-        });
-
-        // Test Cases Popup for Users
-        const testCasesPopup = document.getElementById('test-cases-popup');
-        const testCasesPopupList = document.getElementById('test-cases-popup-list');
-        const confirmTestCasesBtn = document.getElementById('confirm-test-cases-btn');
-        const testCasesPopupClose = testCasesPopup.querySelector('.modal-close');
-
-        function showTestCasesPopup() {
-          testCasesPopupList.innerHTML = '';
-          db.collection('testCases').where('groupId', '==', currentGroupId).get().then(snapshot => {
-            const groupTestCases = [];
-            snapshot.forEach(doc => groupTestCases.push(doc.data()));
-            if (groupTestCases.length === 0) {
-              testCasesPopupList.innerHTML = '<p>No test cases available for this group.</p>';
-            } else {
-              groupTestCases.forEach(tc => {
-                const p = document.createElement('p');
-                p.textContent = tc.name;
-                testCasesPopupList.appendChild(p);
-              });
-            }
-            testCasesPopup.style.display = 'flex';
-          }).catch(error => {
-            console.error('Error loading test cases for popup:', error);
-            testCasesPopupList.innerHTML = '<p>Error loading test cases.</p>';
-          });
-        }
-
-        function closeTestCasesPopup() {
-          testCasesPopup.style.display = 'none';
-        }
-
-        testCasesPopupClose.addEventListener('click', closeTestCasesPopup);
-        testCasesPopup.addEventListener('click', (e) => {
-          if (e.target === testCasesPopup) closeTestCasesPopup();
-        });
-
-        confirmTestCasesBtn.addEventListener('click', () => {
-          closeTestCasesPopup();
-          userView.classList.add('hidden');
-          testCasesView.classList.remove('hidden');
-          loadTestCasesForUser();
-        });
-
-        // Load test cases for user interaction
-        const testCasesDetails = document.getElementById('test-cases-details');
-        const startProjectBtn = document.getElementById('start-project-btn');
-        const completeProjectBtn = document.getElementById('complete-project-btn');
-
-        function loadTestCasesForUser() {
-          testCasesDetails.innerHTML = '';
-          db.collection('testCases').where('groupId', '==', currentGroupId).get().then(snapshot => {
-            const groupTestCases = [];
-            snapshot.forEach(doc => groupTestCases.push(doc.data()));
-            if (groupTestCases.length === 0) {
-              testCasesDetails.innerHTML = '<p>No test cases available for this group.</p>';
-              return;
-            }
-            groupTestCases.forEach(tc => {
-              const tcCard = document.createElement('div');
-              tcCard.className = 'test-case-card';
-              let stepsHtml = '';
-              if (tc.steps && tc.steps.length > 0) {
-                stepsHtml = '<div class="test-steps">';
-                tc.steps.forEach(step => {
-                  stepsHtml += `<div class="test-step">${step}</div>`;
-                });
-                stepsHtml += '</div>';
-              }
-              tcCard.innerHTML = `
-                <div class="test-case-title">${tc.name}</div>
-                ${stepsHtml}
-                <div class="custom-checkbox">
-                  <input type="checkbox" id="tc-${tc.id}" disabled>
-                  <label class="custom-checkbox-label" for="tc-${tc.id}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                  </label>
-                  <span>Mark as completed</span>
-                </div>
-              `;
-              testCasesDetails.appendChild(tcCard);
-            });
-          }).catch(error => {
-            console.error('Error loading test cases for user:', error);
-            testCasesDetails.innerHTML = '<p>Error loading test cases.</p>';
-          });
-        }
-
-        startProjectBtn.addEventListener('click', () => {
-          const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
-          checkboxes.forEach(checkbox => {
-            checkbox.disabled = false;
-          });
-          startProjectBtn.classList.add('hidden');
-          completeProjectBtn.classList.remove('hidden');
-        });
-
-        completeProjectBtn.addEventListener('click', () => {
-          const checkboxes = testCasesDetails.querySelectorAll('input[type="checkbox"]');
-          let completedCount = 0;
-          const completedTestCases = [];
-          checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-              const tcId = parseInt(checkbox.id.replace('tc-', ''));
-              completedTestCases.push(tcId);
-              completedCount++;
-            }
-          });
-
-          const report = {
-            projectName: currentProject.projectName,
-            userName: currentProject.userName,
-            groupId: currentProject.groupId,
-            groupName: currentGroupName,
-            completedCount,
-            totalCount: checkboxes.length,
-            completedTestCases,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          };
-
-          db.collection('reports').add(report).then(() => {
-            const completionReportModal = document.getElementById('completion-report-modal');
-            const completionReportDetails = document.getElementById('completion-report-details');
-            completionReportDetails.innerHTML = `
-              <div class="completion-box">
-                <h4>Project: ${report.projectName}</h4>
-                <p>User: ${report.userName}</p>
-                <p>Group: ${report.groupName}</p>
-                <p class="score-display">${Math.round((report.completedCount / report.totalCount) * 100)}% Score</p>
-                <div class="graph-container">
-                  <canvas id="completion-chart"></canvas>
-                </div>
-              </div>
-            `;
-            completionReportModal.style.display = 'flex';
-
-            const ctx = document.getElementById('completion-chart').getContext('2d');
-            new Chart(ctx, {
-              type: 'bar',
-              data: {
-                labels: ['Completed', 'Remaining'],
-                datasets: [{
-                  label: 'Test Cases',
-                  data: [report.completedCount, report.totalCount - report.completedCount],
-                  backgroundColor: ['#10b981', '#e5e7eb'],
-                  borderColor: ['#10b981', '#e5e7eb'],
-                  borderWidth: 1
-                }]
+              ]
+            },
+            options: { 
+              scales: { 
+                y: { beginAtZero: true } 
               },
-              options: {
-                indexAxis: 'y',
-                scales: {
-                  x: {
-                    beginAtZero: true,
-                    max: report.totalCount
-                  }
-                },
-                plugins: {
-                  legend: {
-                    display: false
-                  }
-                }
-              }
-            });
-
-            testCasesView.classList.add('hidden');
-            userView.classList.remove('hidden');
-            currentProject = null;
-            startProjectBtn.classList.remove('hidden');
-            completeProjectBtn.classList.add('hidden');
-            loadUserTestGroups();
-            if (currentRole === 'admin') loadReports();
-          }).catch(error => {
-            console.error('Error saving report:', error);
-            alert('Error saving project report.');
+              responsive: true,
+              maintainAspectRatio: false
+            }
           });
-        });
 
-        // Completion Report Modal
-        const completionReportModal = document.getElementById('completion-report-modal');
-        const closeReportBtn = document.getElementById('close-report-btn');
-        const completionReportModalClose = completionReportModal.querySelector('.modal-close');
-
-        function closeCompletionReportModal() {
-          completionReportModal.style.display = 'none';
+          return () => {
+            if (window.reportsChart) {
+              window.reportsChart.destroy();
+            }
+          };
+        } catch (err) {
+          setChartError('Failed to render chart. Check console for details.');
+          console.error('Error rendering chart in ViewReports:', err.message);
         }
+      }, [reports]);
 
-        closeReportBtn.addEventListener('click', closeCompletionReportModal);
-        completionReportModalClose.addEventListener('click', closeCompletionReportModal);
-        completionReportModal.addEventListener('click', (e) => {
-          if (e.target === completionReportModal) closeCompletionReportModal();
-        });
+      return React.createElement(
+        'div',
+        null,
+        React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'View Reports'),
+        error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
+        reports.length > 0
+          ? [
+              chartError
+                ? React.createElement('p', { className: 'text-red-500 mb-4' }, chartError)
+                : React.createElement('div', { className: 'mb-6', style: { height: '300px' } }, 
+                    React.createElement('canvas', { id: 'reportsChart' })
+                  ),
+              React.createElement(
+                'div',
+                { className: 'space-y-4' },
+                reports.map(report =>
+                  React.createElement(
+                    'div',
+                    { key: report.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
+                    React.createElement('h3', { className: 'font-semibold text-gray-800' }, report.userName || 'Unknown'),
+                    React.createElement('p', { className: 'text-gray-600' }, 'Project: ', report.projectName || 'N/A', ', Phase: ', report.phase || 'N/A'),
+                    React.createElement('p', { className: 'text-gray-600' }, 'Completed: ', report.completedCount || 0, ', Pending: ', report.pendingCount || 0),
+                    React.createElement('p', { className: 'text-gray-600' }, 'Pending Test Cases: ', report.pendingTestCases || 'None'),
+                    React.createElement('p', { className: 'text-gray-600' }, 'Time Spent: ', Math.floor(report.timeSpent / 60) || 0, 'm ', report.timeSpent % 60 || 0, 's')
+                  )
+                )
+              )
+            ]
+          : React.createElement('p', { className: 'text-gray-600 mb-6' }, 'No reports available yet. Users need to complete test executions.')
+      );
+    }
 
-        // Admin Dashboard buttons
-        const manageGroupsBtn = document.getElementById('manage-groups-btn');
-        const manageTestCasesBtn = document.getElementById('manage-test-cases-btn');
-        const manageGroupsSection = document.getElementById('manage-groups-section');
-        const manageTestCasesSection = document.getElementById('manage-test-cases-section');
-        const viewReportsSection = document.getElementById('view-reports-section');
+    function UserDashboard({ user }) {
+      const [showPopup, setShowPopup] = useState(true);
+      const [userName, setUserName] = useState('');
+      const [projectName, setProjectName] = useState('');
+      const [phase, setPhase] = useState('');
+      const [groups, setGroups] = useState([]);
+      const [selectedGroup, setSelectedGroup] = useState(null);
+      const [testCases, setTestCases] = useState([]);
+      const [timer, setTimer] = useState(0);
+      const [isRunning, setIsRunning] = useState(false);
+      const [completed, setCompleted] = useState({});
+      const [error, setError] = useState('');
 
-        manageGroupsBtn.addEventListener('click', () => {
-          manageGroupsSection.classList.remove('hidden');
-          manageTestCasesSection.classList.add('hidden');
-          viewReportsSection.classList.add('hidden');
-          loadTestGroups();
-        });
-
-        manageTestCasesBtn.addEventListener('click', () => {
-          manageGroupsSection.classList.add('hidden');
-          manageTestCasesSection.classList.remove('hidden');
-          viewReportsSection.classList.add('hidden');
-          loadTestCases();
-        });
-
-        viewReportsBtn.addEventListener('click', () => {
-          manageGroupsSection.classList.add('hidden');
-          manageTestCasesSection.classList.add('hidden');
-          viewReportsSection.classList.remove('hidden');
-          loadReports();
-        });
-
-        // Add Group button
-        document.getElementById('add-group-btn').addEventListener('click', () => {
-          if (currentRole !== 'admin') {
-            alert('You must be logged in as admin to perform this action.');
-            return;
+      useEffect(() => {
+        const loadSession = async () => {
+          try {
+            const session = JSON.parse(localStorage.getItem('userSession') || '{}');
+            if (session.userName && session.projectName && session.phase) {
+              setUserName(session.userName);
+              setProjectName(session.projectName);
+              setPhase(session.phase);
+              setShowPopup(false);
+              const storedGroups = await storageRequest('Groups');
+              setGroups(storedGroups.filter(g => g.phase === session.phase) || []);
+              setTimer(session.timer || 0);
+              setIsRunning(session.isRunning || false);
+              setCompleted(session.completed || {});
+              setSelectedGroup(session.selectedGroup || null);
+              if (session.selectedGroup) {
+                const storedTestCases = await storageRequest('TestCases');
+                setTestCases(storedTestCases.filter(tc => tc.groupId === session.selectedGroup) || []);
+              }
+            }
+          } catch (err) {
+            setError('Failed to load session. Check console for details.');
+            console.error('Error in UserDashboard useEffect:', err.message);
           }
-          openGroupModal('Add Test Group');
-        });
+        };
+        loadSession();
+      }, []);
 
-        // Add Test Case button
-        document.getElementById('add-test-case-btn').addEventListener('click', () => {
-          if (currentRole !== 'admin') {
-            alert('You must be logged in as admin to perform this action.');
-            return;
-          }
-          openTestCaseModal();
-        });
-
-        // Auth (Login/Logout) button
-        authButton.addEventListener('click', () => {
-          console.log('Auth button clicked'); // Debug
-          if (authButton.textContent === 'Logout') {
-            auth.signOut().then(() => {
-              currentUser = null;
-              currentRole = null;
-              localStorage.removeItem('userSession');
-              userInfo.textContent = 'User: Not logged in';
-              authButton.textContent = 'Login';
-              authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-              authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-              updateViewBasedOnRole();
-              alert('You have been logged out successfully!');
-            }).catch((error) => {
-              console.error('Logout error:', error);
-              alert('Error during logout: ' + error.message);
+      useEffect(() => {
+        let interval;
+        if (isRunning) {
+          interval = setInterval(() => {
+            setTimer(prev => {
+              const newTimer = prev + 1;
+              localStorage.setItem('userSession', JSON.stringify({
+                userName,
+                projectName,
+                phase,
+                timer: newTimer,
+                isRunning,
+                completed,
+                selectedGroup
+              }));
+              return newTimer;
             });
-          } else {
-            openLoginModal();
-          }
-        });
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [isRunning, userName, projectName, phase, completed, selectedGroup]);
 
-        // Listen for auth state changes
-        auth.onAuthStateChanged((user) => {
-          console.log('Auth state changed, user:', user ? user.uid : 'null');
-          if (user) {
-            // User is signed in
-            db.collection('users').doc(user.uid).get()
-              .then((doc) => {
-                if (doc.exists) {
-                  const session = JSON.parse(localStorage.getItem('userSession'));
-                  if (session && session.role === doc.data().role) {
-                    currentUser = session.email.split('@')[0];
-                    currentRole = session.role;
-                    userInfo.textContent = `User: ${currentUser} (${currentRole})`;
-                    authButton.textContent = 'Logout';
-                    authButton.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-                    authButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                    updateViewBasedOnRole();
-                  } else {
-                    // Session mismatch or no session, force logout
-                    auth.signOut().then(() => {
-                      localStorage.removeItem('userSession');
-                      currentUser = null;
-                      currentRole = null;
-                      userInfo.textContent = 'User: Not logged in';
-                      authButton.textContent = 'Login';
-                      authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                      authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-                      updateViewBasedOnRole();
-                    });
-                  }
-                } else {
-                  console.error('No user role found in Firestore for UID:', user.uid);
-                  alert('No user role found in Firestore for UID: ' + user.uid);
-                  auth.signOut().then(() => {
-                    localStorage.removeItem('userSession');
-                    currentUser = null;
-                    currentRole = null;
-                    userInfo.textContent = 'User: Not logged in';
-                    authButton.textContent = 'Login';
-                    authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                    authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-                    updateViewBasedOnRole();
-                  });
-                }
-              })
-              .catch((error) => {
-                console.error('Error checking user role:', error);
-                alert('Error checking user role: ' + error.message);
-                auth.signOut().then(() => {
-                  localStorage.removeItem('userSession');
-                  currentUser = null;
-                  currentRole = null;
-                  userInfo.textContent = 'User: Not logged in';
-                  authButton.textContent = 'Login';
-                  authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                  authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-                  updateViewBasedOnRole();
-                });
-              });
-          } else {
-            // User is signed out
-            currentUser = null;
-            currentRole = null;
-            localStorage.removeItem('userSession');
-            userInfo.textContent = 'User: Not logged in';
-            authButton.textContent = 'Login';
-            authButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            authButton.classList.add('bg-gray-600', 'hover:bg-gray-700');
-            updateViewBasedOnRole();
+      const handlePopupSubmit = async () => {
+        if (userName && projectName && phase) {
+          try {
+            setShowPopup(false);
+            const storedGroups = await storageRequest('Groups');
+            setGroups(storedGroups.filter(g => g.phase === phase) || []);
+            localStorage.setItem('userSession', JSON.stringify({
+              userName,
+              projectName,
+              phase,
+              timer: 0,
+              isRunning: false,
+              completed: {},
+              selectedGroup: null
+            }));
+          } catch (err) {
+            setError('Failed to save session. Check console for details.');
+            console.error('Error in handlePopupSubmit:', err.message);
           }
-        });
-      }
+        }
+      };
 
-      // Start the initialization process
-      initializeFirebase();
-    });
+      const handleGroupSelect = async (groupId) => {
+        try {
+          setSelectedGroup(groupId);
+          const storedTestCases = await storageRequest('TestCases');
+          setTestCases(storedTestCases.filter(tc => tc.groupId === groupId) || []);
+          localStorage.setItem('userSession', JSON.stringify({
+            userName,
+            projectName,
+            phase,
+            timer,
+            isRunning,
+            completed,
+            selectedGroup: groupId
+          }));
+        } catch (err) {
+          setError('Failed to load test cases. Check console for details.');
+          console.error('Error in handleGroupSelect:', err.message);
+        }
+      };
+
+      const handleStartProject = () => {
+        setIsRunning(true);
+        localStorage.setItem('userSession', JSON.stringify({
+          userName,
+          projectName,
+          phase,
+          timer,
+          isRunning: true,
+          completed,
+          selectedGroup
+        }));
+      };
+
+      const handleEndProject = async () => {
+        try {
+          setIsRunning(false);
+          const completedCount = Object.values(completed).filter(v => v).length;
+          const pendingCount = testCases.length - completedCount;
+          const pendingTestCases = testCases
+            .filter((_, idx) => !completed[idx])
+            .map(tc => tc.title)
+            .join(', ');
+          const newReport = {
+            id: generateUUID(),
+            userName,
+            projectName,
+            phase,
+            completedCount,
+            pendingCount,
+            pendingTestCases,
+            timeSpent: timer
+          };
+          await storageRequest('Reports', 'POST', [newReport]);
+          localStorage.removeItem('userSession');
+          setShowPopup(true);
+          setSelectedGroup(null);
+          setTestCases([]);
+          setTimer(0);
+          setCompleted({});
+        } catch (err) {
+          setError('Failed to save report. Check console for details.');
+          console.error('Error in handleEndProject:', err.message);
+        }
+      };
+
+      const handleCheckboxChange = (index) => {
+        setCompleted(prev => {
+          const newCompleted = { ...prev, [index]: !prev[index] };
+          localStorage.setItem('userSession', JSON.stringify({
+            userName,
+            projectName,
+            phase,
+            timer,
+            isRunning,
+            completed: newCompleted,
+            selectedGroup
+          }));
+          return newCompleted;
+        });
+      };
+
+      const handleLogout = () => {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userSession');
+        window.location.reload();
+      };
+
+      return React.createElement(
+        'div',
+        { className: 'flex min-h-screen' },
+        React.createElement(
+          'div',
+          { className: 'w-64 bg-white p-6 shadow-sm' },
+          React.createElement('h2', { className: 'text-xl font-semibold mb-6 text-gray-800' }, 'TestCase Manager'),
+          React.createElement(
+            'nav',
+            null,
+            React.createElement(
+              'button',
+              { className: 'w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center bg-gray-100 text-gray-800' },
+              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
+              'Test Execution'
+            )
+          )
+        ),
+        React.createElement(
+          'div',
+          { className: 'flex-1 p-8' },
+          React.createElement(
+            'div',
+            { className: 'flex justify-between items-center mb-6' },
+            React.createElement('h1', { className: 'text-2xl font-bold text-gray-800' }, 'Test Case Management System'),
+            React.createElement(
+              'div',
+              { className: 'flex items-center space-x-3' },
+              React.createElement(
+                'div',
+                { className: 'flex items-center space-x-2' },
+                React.createElement(
+                  'div',
+                  { className: 'w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center' },
+                  React.createElement('svg', { className: 'w-5 h-5 text-gray-600', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 10a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z' }))
+                ),
+                React.createElement('span', { className: 'text-gray-700' }, user.role)
+              ),
+              React.createElement(
+                'button',
+                {
+                  onClick: handleLogout,
+                  className: 'text-gray-600 hover:text-gray-800 flex items-center'
+                },
+                React.createElement('svg', { className: 'w-5 h-5 mr-1', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M3 3h14v14H3V3zm10 6h4v2h-4v4l-4-4 4-4v4z' })),
+                'Logout'
+              )
+            )
+          ),
+          React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'User Dashboard'),
+          error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
+          showPopup
+            ? React.createElement(
+                'div',
+                { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50' },
+                React.createElement(
+                  'div',
+                  { className: 'bg-white p-6 rounded-lg custom-shadow w-96' },
+                  React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Start New Test Execution'),
+                  React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'User Name'),
+                  React.createElement('input', {
+                    type: 'text',
+                    placeholder: 'Enter your name',
+                    value: userName,
+                    onChange: (e) => setUserName(e.target.value),
+                    className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                  }),
+                  React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Project Name'),
+                  React.createElement('input', {
+                    type: 'text',
+                    placeholder: 'Enter project name',
+                    value: projectName,
+                    onChange: (e) => setProjectName(e.target.value),
+                    className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                  }),
+                  React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Phase'),
+                  React.createElement(
+                    'select',
+                    {
+                      value: phase,
+                      onChange: (e) => setPhase(e.target.value),
+                      className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                    },
+                    React.createElement('option', { value: '' }, 'Select a phase'),
+                    React.createElement('option', { value: 'Phase 1' }, 'Phase 1'),
+                    React.createElement('option', { value: 'Phase 2' }, 'Phase 2'),
+                    React.createElement('option', { value: 'Phase 3' }, 'Phase 3')
+                  ),
+                  React.createElement(
+                    'button',
+                    {
+                      onClick: handlePopupSubmit,
+                      className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition'
+                    },
+                    'Start Execution'
+                  )
+                )
+              )
+            : [
+                React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', projectName, ', Phase: ', phase),
+                groups.length > 0
+                  ? !selectedGroup
+                      ? React.createElement(
+                          'div',
+                          { className: 'space-y-4' },
+                          React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Select a Test Group'),
+                          groups.map(group =>
+                            React.createElement(
+                              'div',
+                              { key: group.id, className: 'bg-white p-4 rounded-lg custom-shadow card-hover' },
+                              React.createElement('h4', { className: 'font-semibold text-gray-800' }, group.name),
+                              React.createElement('p', { className: 'text-gray-600' }, 'Description: ', group.description || 'None'),
+                              React.createElement('p', { className: 'text-gray-600' }, 'Phase: ', group.phase),
+                              React.createElement(
+                                'button',
+                                {
+                                  onClick: () => handleGroupSelect(group.id),
+                                  className: 'mt-2 bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800'
+                                },
+                                'Select Group'
+                              )
+                            )
+                          )
+                        )
+                      : React.createElement(
+                          'div',
+                          null,
+                          React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Timer: ', Math.floor(timer / 60), 'm ', timer % 60, 's'),
+                          !isRunning &&
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: handleStartProject,
+                                className: 'bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 mb-4'
+                              },
+                              'Start Timer'
+                            ),
+                          isRunning &&
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: handleEndProject,
+                                className: 'bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 mb-4'
+                              },
+                              'End Execution'
+                            ),
+                          testCases.length > 0
+                            ? React.createElement(
+                                'div',
+                                { className: 'space-y-4' },
+                                testCases.map((tc, idx) =>
+                                  React.createElement(
+                                    'div',
+                                    { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
+                                    React.createElement(
+                                      'div',
+                                      { className: 'flex items-start' },
+                                      React.createElement('input', {
+                                        type: 'checkbox',
+                                        checked: completed[idx] || false,
+                                        onChange: () => handleCheckboxChange(idx),
+                                        className: 'mr-3 mt-1'
+                                      }),
+                                      React.createElement(
+                                        'div',
+                                        null,
+                                        React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
+                                        React.createElement(
+                                          'ul',
+                                          { className: 'ml-4 list-disc text-gray-700' },
+                                          tc.steps.split('\n').map((step, stepIdx) =>
+                                            React.createElement('li', { key: stepIdx }, step)
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            : React.createElement('p', { className: 'text-gray-600' }, 'No test cases available for this group.')
+                        )
+                  : React.createElement('p', { className: 'text-gray-600' }, 'No groups available for this phase.')
+              ]
+        )
+      );
+    }
+
+    ReactDOM.render(React.createElement(App), document.getElementById('root'));
   </script>
 </body>
 </html>

@@ -819,6 +819,11 @@
       const [steps, setSteps] = useState('');
       const [selectedGroup, setSelectedGroup] = useState('');
       const [error, setError] = useState('');
+      // Edit state
+      const [editId, setEditId] = useState(null);
+      const [editTitle, setEditTitle] = useState('');
+      const [editSteps, setEditSteps] = useState('');
+      const [editGroup, setEditGroup] = useState('');
 
       useEffect(() => {
         const fetchData = async () => {
@@ -883,6 +888,47 @@
         } catch (err) {
           setError(`Failed to delete test case: ${err.message}. Check console.`);
           console.error('Error in handleDelete:', err);
+        }
+      };
+
+      // --- Edit logic ---
+      const handleEdit = (tc) => {
+        setEditId(tc.id);
+        setEditTitle(tc.title);
+        setEditSteps(tc.steps);
+        setEditGroup(tc.groupId);
+      };
+
+      const handleEditCancel = () => {
+        setEditId(null);
+        setEditTitle('');
+        setEditSteps('');
+        setEditGroup('');
+      };
+
+      const handleEditSave = async () => {
+        if (!editTitle || !editSteps || !editGroup) {
+          setError('All fields are required');
+          return;
+        }
+        try {
+          // Remove old, add updated
+          const updated = testCases.map(tc =>
+            tc.id === editId
+              ? { ...tc, title: editTitle, steps: editSteps, groupId: editGroup }
+              : tc
+          );
+          await storageRequest('TestCases', 'CLEAR');
+          await storageRequest('TestCases', 'POST', updated);
+          setTestCases(updated);
+          setEditId(null);
+          setEditTitle('');
+          setEditSteps('');
+          setEditGroup('');
+          setError('');
+        } catch (err) {
+          setError(`Failed to update test case: ${err.message}. Check console.`);
+          console.error('Error in handleEditSave:', err);
         }
       };
 
@@ -952,47 +998,107 @@
               'div',
               { className: 'space-y-4' },
               testCases.map(tc =>
-                React.createElement(
-                  'div',
-                  { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
-                  React.createElement(
-                    'div',
-                    { className: 'flex justify-between items-start' },
-                    React.createElement(
+                editId === tc.id
+                  ? React.createElement(
                       'div',
-                      null,
-                      React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
-                      React.createElement('p', { className: 'text-gray-600' }, 'Group: ', groups.find(g => g.id === tc.groupId)?.name || 'Unknown'),
+                      { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
                       React.createElement(
-                        'ul',
-                        { className: 'ml-4 list-disc text-gray-700' },
-                        tc.steps.split('\n').map((step, idx) =>
-                          React.createElement('li', { key: idx }, step)
+                        'div',
+                        null,
+                        React.createElement('input', {
+                          type: 'text',
+                          value: editTitle,
+                          onChange: (e) => setEditTitle(e.target.value),
+                          className: 'w-full p-2 border rounded-lg mb-2'
+                        }),
+                        React.createElement('textarea', {
+                          value: editSteps,
+                          onChange: (e) => setEditSteps(e.target.value),
+                          className: 'w-full p-2 border rounded-lg mb-2 h-24'
+                        }),
+                        React.createElement(
+                          'select',
+                          {
+                            value: editGroup,
+                            onChange: (e) => setEditGroup(e.target.value),
+                            className: 'w-full p-2 border rounded-lg mb-2'
+                          },
+                          React.createElement('option', { value: '' }, 'Select a group'),
+                          groups.map(group =>
+                            React.createElement('option', { key: group.id, value: group.id }, group.name)
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          { className: 'flex gap-2' },
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: handleEditSave,
+                              className: 'bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700'
+                            },
+                            'Save'
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: handleEditCancel,
+                              className: 'bg-gray-400 text-white px-3 py-1 rounded-lg hover:bg-gray-500'
+                            },
+                            'Cancel'
+                          )
                         )
                       )
-                    ),
-                    React.createElement(
+                    )
+                  : React.createElement(
                       'div',
-                      { className: 'flex space-x-2' },
+                      { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
                       React.createElement(
-                        'button',
-                        {
-                          onClick: () => handleDuplicate(tc),
-                          className: 'bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600'
-                        },
-                        'Duplicate'
-                      ),
-                      React.createElement(
-                        'button',
-                        {
-                          onClick: () => handleDelete(tc.id),
-                          className: 'bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600'
-                        },
-                        'Delete'
+                        'div',
+                        { className: 'flex justify-between items-start' },
+                        React.createElement(
+                          'div',
+                          null,
+                          React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
+                          React.createElement('p', { className: 'text-gray-600' }, 'Group: ', groups.find(g => g.id === tc.groupId)?.name || 'Unknown'),
+                          React.createElement(
+                            'ul',
+                            { className: 'ml-4 list-disc text-gray-700' },
+                            tc.steps.split('\n').map((step, idx) =>
+                              React.createElement('li', { key: idx }, step)
+                            )
+                          )
+                        ),
+                        React.createElement(
+                          'div',
+                          { className: 'flex flex-col gap-2' },
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: () => handleEdit(tc),
+                              className: 'bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600'
+                            },
+                            'Edit'
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: () => handleDuplicate(tc),
+                              className: 'bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600'
+                            },
+                            'Duplicate'
+                          ),
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: () => handleDelete(tc.id),
+                              className: 'bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600'
+                            },
+                            'Delete'
+                          )
+                        )
                       )
                     )
-                  )
-                )
               )
             )
           : React.createElement('p', { className: 'text-gray-600' }, 'No test cases have been created yet. Use the form above to add one.')

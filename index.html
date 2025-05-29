@@ -824,6 +824,11 @@
       const [editTitle, setEditTitle] = useState('');
       const [editSteps, setEditSteps] = useState('');
       const [editGroup, setEditGroup] = useState('');
+      // Import state
+      const fileInputRef = useRef(null);
+      // Search/filter state
+      const [search, setSearch] = useState('');
+      const [groupFilter, setGroupFilter] = useState('');
 
       useEffect(() => {
         const fetchData = async () => {
@@ -932,11 +937,135 @@
         }
       };
 
+      // --- Import CSV logic ---
+      function parseCSV(csv) {
+        const lines = csv.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+        return lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = values[i] || ''; });
+          return obj;
+        });
+      }
+
+      const handleImportCSV = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+          try {
+            const text = evt.target.result;
+            const rows = parseCSV(text);
+            // Validate columns
+            if (!rows.length || !('title' in rows[0]) || !('steps' in rows[0]) || !('groupName' in rows[0])) {
+              setError('CSV must have columns: title, steps, groupName');
+              return;
+            }
+            // Map groupName to groupId
+            const groupMap = {};
+            groups.forEach(g => { groupMap[g.name] = g.id; });
+            const newTestCases = [];
+            for (const row of rows) {
+              const groupId = groupMap[row.groupName];
+              if (!groupId) {
+                setError(`Group "${row.groupName}" not found. Please create it first.`);
+                return;
+              }
+              newTestCases.push({
+                id: generateUUID(),
+                title: row.title,
+                steps: row.steps,
+                groupId,
+                createdAt: new Date().toISOString()
+              });
+            }
+            await storageRequest('TestCases', 'POST', newTestCases);
+            const updatedTestCases = await storageRequest('TestCases');
+            setTestCases(updatedTestCases || []);
+            setError('');
+          } catch (err) {
+            setError('Failed to import CSV. Check file format and console.');
+            console.error('Import CSV error:', err);
+          }
+        };
+        reader.readAsText(file);
+        // Reset input so same file can be re-uploaded if needed
+        e.target.value = '';
+      };
+
+      // --- Filtered/grouped test cases ---
+      let filteredTestCases = testCases;
+      if (search) {
+        filteredTestCases = filteredTestCases.filter(tc =>
+          (tc.title || '').toLowerCase().includes(search.toLowerCase()) ||
+          (tc.steps || '').toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      if (groupFilter) {
+        filteredTestCases = filteredTestCases.filter(tc => tc.groupId === groupFilter);
+      }
+      // Group by groupId
+      const groupMap = {};
+      groups.forEach(g => { groupMap[g.id] = g; });
+      const grouped = {};
+      filteredTestCases.forEach(tc => {
+        if (!grouped[tc.groupId]) grouped[tc.groupId] = [];
+        grouped[tc.groupId].push(tc);
+      });
+
       return React.createElement(
         'div',
         null,
         React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'Manage Test Cases'),
         error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
+        // --- Import CSV UI ---
+        React.createElement(
+          'div',
+          { className: 'mb-4 flex items-center gap-4' },
+          React.createElement(
+            'button',
+            {
+              className: 'bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800',
+              onClick: () => fileInputRef.current && fileInputRef.current.click()
+            },
+            'Import from CSV'
+          ),
+          React.createElement('input', {
+            type: 'file',
+            accept: '.csv',
+            ref: fileInputRef,
+            style: { display: 'none' },
+            onChange: handleImportCSV
+          }),
+          React.createElement(
+            'span',
+            { className: 'text-sm text-gray-500' },
+            'CSV columns: title, steps, groupName'
+          )
+        ),
+        // --- Search and filter UI ---
+        React.createElement(
+          'div',
+          { className: 'mb-4 flex flex-wrap gap-4 items-end' },
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Search by title or steps',
+            value: search,
+            onChange: e => setSearch(e.target.value),
+            className: 'p-2 border rounded-lg input-focus'
+          }),
+          React.createElement(
+            'select',
+            {
+              value: groupFilter,
+              onChange: e => setGroupFilter(e.target.value),
+              className: 'p-2 border rounded-lg input-focus'
+            },
+            React.createElement('option', { value: '' }, 'All Groups'),
+            groups.map(g => React.createElement('option', { key: g.id, value: g.id }, g.name))
+          )
+        ),
         React.createElement(
           'div',
           { className: 'bg-white p-6 rounded-lg custom-shadow mb-6' },
@@ -993,112 +1122,117 @@
             )
           )
         ),
-        testCases.length > 0
-          ? React.createElement(
-              'div',
-              { className: 'space-y-4' },
-              testCases.map(tc =>
-                editId === tc.id
-                  ? React.createElement(
-                      'div',
-                      { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
-                      React.createElement(
+        // --- Grouped test cases UI ---
+        Object.keys(grouped).length > 0
+          ? Object.keys(grouped).map(groupId =>
+              React.createElement(
+                'div',
+                { key: groupId, className: 'mb-8' },
+                React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-2' },
+                  groupMap[groupId]?.name || 'Unknown Group'
+                ),
+                grouped[groupId].map(tc =>
+                  editId === tc.id
+                    ? React.createElement(
                         'div',
-                        null,
-                        React.createElement('input', {
-                          type: 'text',
-                          value: editTitle,
-                          onChange: (e) => setEditTitle(e.target.value),
-                          className: 'w-full p-2 border rounded-lg mb-2'
-                        }),
-                        React.createElement('textarea', {
-                          value: editSteps,
-                          onChange: (e) => setEditSteps(e.target.value),
-                          className: 'w-full p-2 border rounded-lg mb-2 h-24'
-                        }),
-                        React.createElement(
-                          'select',
-                          {
-                            value: editGroup,
-                            onChange: (e) => setEditGroup(e.target.value),
-                            className: 'w-full p-2 border rounded-lg mb-2'
-                          },
-                          React.createElement('option', { value: '' }, 'Select a group'),
-                          groups.map(group =>
-                            React.createElement('option', { key: group.id, value: group.id }, group.name)
-                          )
-                        ),
-                        React.createElement(
-                          'div',
-                          { className: 'flex gap-2' },
-                          React.createElement(
-                            'button',
-                            {
-                              onClick: handleEditSave,
-                              className: 'bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700'
-                            },
-                            'Save'
-                          ),
-                          React.createElement(
-                            'button',
-                            {
-                              onClick: handleEditCancel,
-                              className: 'bg-gray-400 text-white px-3 py-1 rounded-lg hover:bg-gray-500'
-                            },
-                            'Cancel'
-                          )
-                        )
-                      )
-                    )
-                  : React.createElement(
-                      'div',
-                      { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
-                      React.createElement(
-                        'div',
-                        { className: 'flex justify-between items-start' },
+                        { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover mb-2' },
                         React.createElement(
                           'div',
                           null,
-                          React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
-                          React.createElement('p', { className: 'text-gray-600' }, 'Group: ', groups.find(g => g.id === tc.groupId)?.name || 'Unknown'),
+                          React.createElement('input', {
+                            type: 'text',
+                            value: editTitle,
+                            onChange: (e) => setEditTitle(e.target.value),
+                            className: 'w-full p-2 border rounded-lg mb-2'
+                          }),
+                          React.createElement('textarea', {
+                            value: editSteps,
+                            onChange: (e) => setEditSteps(e.target.value),
+                            className: 'w-full p-2 border rounded-lg mb-2 h-24'
+                          }),
                           React.createElement(
-                            'ul',
-                            { className: 'ml-4 list-disc text-gray-700' },
-                            tc.steps.split('\n').map((step, idx) =>
-                              React.createElement('li', { key: idx }, step)
+                            'select',
+                            {
+                              value: editGroup,
+                              onChange: (e) => setEditGroup(e.target.value),
+                              className: 'w-full p-2 border rounded-lg mb-2'
+                            },
+                            React.createElement('option', { value: '' }, 'Select a group'),
+                            groups.map(group =>
+                              React.createElement('option', { key: group.id, value: group.id }, group.name)
                             )
-                          )
-                        ),
-                        React.createElement(
-                          'div',
-                          { className: 'flex flex-col gap-2' },
-                          React.createElement(
-                            'button',
-                            {
-                              onClick: () => handleEdit(tc),
-                              className: 'bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600'
-                            },
-                            'Edit'
                           ),
                           React.createElement(
-                            'button',
-                            {
-                              onClick: () => handleDuplicate(tc),
-                              className: 'bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600'
-                            },
-                            'Duplicate'
-                          ),
-                          React.createElement(
-                            'button',
-                            {
-                              onClick: () => handleDelete(tc.id),
-                              className: 'bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600'
-                            },
-                            'Delete'
+                            'div',
+                            { className: 'flex gap-2' },
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: handleEditSave,
+                                className: 'bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700'
+                              },
+                              'Save'
+                            ),
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: handleEditCancel,
+                                className: 'bg-gray-400 text-white px-3 py-1 rounded-lg hover:bg-gray-500'
+                              },
+                              'Cancel'
+                            )
                           )
                         )
                       )
-                    )
+                    : React.createElement(
+                        'div',
+                        { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover mb-2' },
+                        React.createElement(
+                          'div',
+                          { className: 'flex justify-between items-start' },
+                          React.createElement(
+                            'div',
+                            null,
+                            React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
+                            React.createElement(
+                              'ul',
+                              { className: 'ml-4 list-disc text-gray-700' },
+                              tc.steps.split('\n').map((step, idx) =>
+                                React.createElement('li', { key: idx }, step)
+                              )
+                            )
+                          ),
+                          React.createElement(
+                            'div',
+                            { className: 'flex flex-col gap-2' },
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: () => handleEdit(tc),
+                                className: 'bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600'
+                              },
+                              'Edit'
+                            ),
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: () => handleDuplicate(tc),
+                                className: 'bg-yellow-500 text-white px-3 py-1 rounded-lg hover:bg-yellow-600'
+                              },
+                              'Duplicate'
+                            ),
+                            React.createElement(
+                              'button',
+                              {
+                                onClick: () => handleDelete(tc.id),
+                                className: 'bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600'
+                              },
+                              'Delete'
+                            )
+                          )
+                        )
+                      )
+                )
               )
             )
           : React.createElement('p', { className: 'text-gray-600' }, 'No test cases have been created yet. Use the form above to add one.')

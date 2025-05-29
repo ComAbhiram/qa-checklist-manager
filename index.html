@@ -192,8 +192,9 @@
       try {
         await storageRequest('Users', 'CLEAR');
         const demoUsers = [
-          { id: 'user-1', email: 'admin@admin.com', password: 'admin123', role: 'admin' },
-          { id: 'user-2', email: 'aswathi@demo.com', password: 'user123', role: 'user' }
+          { id: 'user-1', email: 'abhiram@intersmart.in', userName: 'Abhiram', password: 'admin123', role: 'QA Lead' },
+          { id: 'user-2', email: 'aswathi@intersmart.in', userName: 'aswathi', password: 'user123', role: 'Senior QA Analyst' },
+          { id: 'user-3', email: 'minnu@intersmart.in', userName: 'Minnu', password: 'user123', role: 'Senior QA Analys' }
         ];
         await storageRequest('Users', 'POST', demoUsers);
         const users = await storageRequest('Users');
@@ -208,8 +209,9 @@
       } catch (err) {
         console.error('Failed to initialize Supabase data:', err);
         const demoUsers = [
-          { id: 'user-1', email: 'admin@admin.com', password: 'admin123', role: 'admin' },
-          { id: 'user-2', email: 'aswathi@demo.com', password: 'user123', role: 'user' }
+          { id: 'user-1', email: 'abhiram@intersmart.in', userName: 'Abhiram', password: 'admin123', role: 'QA Lead' },
+          { id: 'user-2', email: 'aswathi@intersmart.in', userName: 'aswathi', password: 'user123', role: 'Senior QA Analyst' },
+          { id: 'user-3', email: 'minnu@intersmart.in', userName: 'Minnu', password: 'user123', role: 'Senior QA Analyst' }
         ];
         setLocalStorageData('Users', demoUsers);
         setLocalStorageData('Groups', []);
@@ -339,7 +341,7 @@
           React.createElement(FlashTicker),
           !user
             ? React.createElement(Login, { setUser, setRole })
-            : role === 'admin'
+            : user.role === 'QA Lead'
             ? React.createElement(AdminDashboard, { user })
             : React.createElement(UserDashboard, { user })
         )
@@ -363,7 +365,11 @@
           }
           const foundUser = users.find(u => u.email === email && u.password === password);
           if (foundUser) {
-            if ((loginMode === 'admin' && foundUser.role === 'admin') || (loginMode === 'user' && foundUser.role === 'user')) {
+            // Accept "QA Lead" as admin, and "Senior QA Analyst"/"Senior QA Analys" as user
+            if (
+              (loginMode === 'admin' && foundUser.role === 'QA Lead') ||
+              (loginMode === 'user' && (foundUser.role === 'Senior QA Analyst' || foundUser.role === 'Senior QA Analys'))
+            ) {
               localStorage.setItem('currentUser', JSON.stringify(foundUser));
               setUser(foundUser);
               setRole(foundUser.role);
@@ -371,7 +377,7 @@
               setError(`Role mismatch: Selected "${loginMode}" login, but user is a "${foundUser.role}".`);
             }
           } else {
-            setError('Invalid email or password. Use admin@admin.com/admin123 for Admin, or aswathi@demo.com/user123 for User.');
+            setError('Invalid email or password. Use abhiram@intersmart.in/admin123 for Admin, or aswathi@intersmart.in/user123 for User.');
           }
         } catch (err) {
           setError(`Failed to process login: ${err.message}. Demo users in localStorage.`);
@@ -1191,7 +1197,6 @@
       const [activeTab, setActiveTab] = useState('dashboard');
       const [showPopup, setShowPopup] = useState(true);
       const [showReport, setShowReport] = useState(false);
-      const [userName, setUserName] = useState('');
       const [projectName, setProjectName] = useState('');
       const [phase, setPhase] = useState('');
       const [groups, setGroups] = useState([]);
@@ -1212,9 +1217,9 @@
         // Fetch all reports for this user for dashboard
         (async () => {
           const allReports = await storageRequest('Reports');
-          setUserReports((allReports || []).filter(r => r.userName === userName || r.userName === user.email));
+          setUserReports((allReports || []).filter(r => r.userName === user.email));
         })();
-      }, [user, userName]);
+      }, [user]);
 
       useEffect(() => {
         // Render dashboard bar chart
@@ -1276,8 +1281,7 @@
         const loadSession = async () => {
           try {
             const session = JSON.parse(localStorage.getItem('userSession') || '{}');
-            if (session.userName && session.projectName && session.phase) {
-              setUserName(session.userName);
+            if (session.projectName && session.phase) {
               setProjectName(session.projectName);
               setPhase(session.phase);
               setShowPopup(false);
@@ -1307,7 +1311,7 @@
             setTimer(prev => {
               const newTimer = prev + 1;
               localStorage.setItem('userSession', JSON.stringify({
-                userName,
+                userName: user.email,
                 projectName,
                 phase,
                 timer: newTimer,
@@ -1320,7 +1324,7 @@
           }, 1000);
         }
         return () => clearInterval(interval);
-      }, [isRunning, userName, projectName, phase, completed, selectedGroup]);
+      }, [isRunning, user, projectName, phase, completed, selectedGroup]);
 
       useEffect(() => {
         if (!showReport || !reportData) return;
@@ -1390,8 +1394,8 @@
       }, [showReport, reportData]);
 
       const handlePopupSubmit = async () => {
-        if (!userName || !projectName || !phase) {
-          setError('User name, project name, and phase are required');
+        if (!projectName || !phase) {
+          setError('Project name and phase are required');
           return;
         }
         try {
@@ -1400,7 +1404,7 @@
           const storedGroups = await storageRequest('Groups');
           setGroups(storedGroups.filter(g => g.phase === phase) || []);
           localStorage.setItem('userSession', JSON.stringify({
-            userName,
+            userName: user.email,
             projectName,
             phase,
             timer: 0,
@@ -1416,7 +1420,6 @@
 
       const handlePopupClose = () => {
         setShowPopup(false);
-        setUserName('');
         setProjectName('');
         setPhase('');
         setError('');
@@ -1428,7 +1431,7 @@
           const storedTestCases = await storageRequest('TestCases');
           setTestCases(storedTestCases.filter(tc => tc.groupId === groupId) || []);
           localStorage.setItem('userSession', JSON.stringify({
-            userName,
+            userName: user.email,
             projectName,
             phase,
             timer,
@@ -1447,7 +1450,7 @@
         setSelectedGroup(null);
         setTestCases([]);
         localStorage.setItem('userSession', JSON.stringify({
-          userName,
+          userName: user.email,
           projectName,
           phase,
           timer,
@@ -1460,7 +1463,7 @@
       const handleStartProject = () => {
         setIsRunning(true);
         localStorage.setItem('userSession', JSON.stringify({
-          userName,
+          userName: user.email,
           projectName,
           phase,
           timer,
@@ -1481,7 +1484,7 @@
             .join(', ');
           const newReport = {
             id: generateUUID(),
-            userName,
+            userName: user.email,
             projectName,
             phase,
             completedCount,
@@ -1507,7 +1510,6 @@
       const handleCloseReport = () => {
         setShowReport(false);
         setShowPopup(true);
-        setUserName('');
         setProjectName('');
         setPhase('');
         setReportData(null);
@@ -1517,7 +1519,7 @@
         setCompleted(prev => {
           const newCompleted = { ...prev, [index]: !prev[index] };
           localStorage.setItem('userSession', JSON.stringify({
-            userName,
+            userName: user.email,
             projectName,
             phase,
             timer,
@@ -1627,14 +1629,12 @@
                     React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
                   )
                 ),
+                // --- Show username as plain text, not input ---
                 React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'User Name'),
-                React.createElement('input', {
-                  type: 'text',
-                  placeholder: 'Enter your name',
-                  value: userName,
-                  onChange: (e) => setUserName(e.target.value),
-                  className: 'w-full p-3 border rounded-lg input-focus mb-4'
-                }),
+                React.createElement('div', { className: 'w-full p-3 border rounded-lg bg-gray-100 mb-4 text-gray-800' },
+                  user.email || user.userName || ''
+                ),
+                // --- End username display ---
                 React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Project Name'),
                 React.createElement('input', {
                   type: 'text',

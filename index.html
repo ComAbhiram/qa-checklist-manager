@@ -1005,7 +1005,16 @@
       const [selectedReport, setSelectedReport] = useState(null);
       const [completedTestCases, setCompletedTestCases] = useState([]);
       const [testCases, setTestCases] = useState([]);
+      const [search, setSearch] = useState('');
+      const [userFilter, setUserFilter] = useState('');
+      const [sortField, setSortField] = useState('createdAt');
+      const [sortDir, setSortDir] = useState('desc');
+      const [page, setPage] = useState(1);
+      const pageSize = 5;
       const chartRef = useRef(null);
+
+      // Collect all users for filter dropdown
+      const [allUsers, setAllUsers] = useState([]);
 
       useEffect(() => {
         const fetchReports = async () => {
@@ -1014,6 +1023,9 @@
             const storedTestCases = await storageRequest('TestCases');
             setReports(storedReports || []);
             setTestCases(storedTestCases || []);
+            // Collect unique users for filter
+            const users = (storedReports || []).map(r => r.userName).filter(Boolean);
+            setAllUsers([...new Set(users)]);
           } catch (err) {
             setError('Failed to load reports or test cases. Check console.');
             console.error('Error in ViewReports:', err);
@@ -1022,34 +1034,56 @@
         fetchReports();
       }, []);
 
+      // --- Filtering, searching, sorting, pagination logic ---
+      let filteredReports = reports;
+      if (search) {
+        filteredReports = filteredReports.filter(r =>
+          (r.projectName || '').toLowerCase().includes(search.toLowerCase()) ||
+          (r.phase || '').toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      if (userFilter) {
+        filteredReports = filteredReports.filter(r => r.userName === userFilter);
+      }
+      if (sortField) {
+        filteredReports = filteredReports.slice().sort((a, b) => {
+          let aVal = a[sortField], bVal = b[sortField];
+          if (sortField === 'completedCount' || sortField === 'pendingCount' || sortField === 'timeSpent') {
+            aVal = Number(aVal) || 0;
+            bVal = Number(bVal) || 0;
+          }
+          if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      const totalPages = Math.ceil(filteredReports.length / pageSize);
+      const pagedReports = filteredReports.slice((page - 1) * pageSize, page * pageSize);
+
+      useEffect(() => { setPage(1); }, [search, userFilter, sortField, sortDir, reports]);
+
       useEffect(() => {
         if (!selectedReport) return;
-
         const canvas = document.getElementById(`adminReportChart-${selectedReport.id}`);
         if (!canvas) {
           setError('Chart canvas element not found');
           console.error('Chart canvas not found for admin report');
           return;
         }
-
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           setError('Failed to get 2D context for chart');
           console.error('Failed to get 2D context for admin report chart');
           return;
         }
-
         if (!Chart) {
           setError('Chart.js library failed to load');
           console.error('Chart.js not available');
           return;
         }
-
-        // Destroy previous chart instance if it exists
         if (chartRef.current) {
           chartRef.current.destroy();
         }
-
         try {
           chartRef.current = new Chart(ctx, {
             type: 'bar',
@@ -1076,8 +1110,6 @@
               maintainAspectRatio: false
             }
           });
-
-          // Calculate completed test cases
           const groupTestCases = testCases.filter(tc => tc.groupId === selectedReport.groupId);
           const pendingTitles = selectedReport.pendingTestCases ? selectedReport.pendingTestCases.split(', ') : [];
           const completed = groupTestCases
@@ -1088,7 +1120,6 @@
           setError('Failed to render report chart. Check console.');
           console.error('Error rendering admin report chart:', err);
         }
-
         return () => {
           if (chartRef.current) {
             chartRef.current.destroy();
@@ -1108,16 +1139,60 @@
         }
       };
 
+      // --- UI ---
       return React.createElement(
         'div',
         null,
         React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'View Reports'),
         error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
-        reports.length > 0
+        // --- Controls ---
+        React.createElement(
+          'div',
+          { className: 'flex flex-wrap gap-4 mb-4 items-end' },
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Search by project or phase',
+            value: search,
+            onChange: e => setSearch(e.target.value),
+            className: 'p-2 border rounded-lg input-focus'
+          }),
+          React.createElement(
+            'select',
+            {
+              value: userFilter,
+              onChange: e => setUserFilter(e.target.value),
+              className: 'p-2 border rounded-lg input-focus'
+            },
+            React.createElement('option', { value: '' }, 'All Users'),
+            allUsers.map(u => React.createElement('option', { key: u, value: u }, u))
+          ),
+          React.createElement(
+            'select',
+            {
+              value: sortField + ':' + sortDir,
+              onChange: e => {
+                const [field, dir] = e.target.value.split(':');
+                setSortField(field);
+                setSortDir(dir);
+              },
+              className: 'p-2 border rounded-lg input-focus'
+            },
+            React.createElement('option', { value: 'createdAt:desc' }, 'Newest First'),
+            React.createElement('option', { value: 'createdAt:asc' }, 'Oldest First'),
+            React.createElement('option', { value: 'completedCount:desc' }, 'Most Completed'),
+            React.createElement('option', { value: 'completedCount:asc' }, 'Least Completed'),
+            React.createElement('option', { value: 'pendingCount:desc' }, 'Most Pending'),
+            React.createElement('option', { value: 'pendingCount:asc' }, 'Least Pending'),
+            React.createElement('option', { value: 'timeSpent:desc' }, 'Longest Time'),
+            React.createElement('option', { value: 'timeSpent:asc' }, 'Shortest Time')
+          )
+        ),
+        // --- Reports List ---
+        pagedReports.length > 0
           ? React.createElement(
               'div',
               { className: 'space-y-4' },
-              reports.map(report =>
+              pagedReports.map(report =>
                 React.createElement(
                   'div',
                   {
@@ -1130,9 +1205,44 @@
                   React.createElement('p', { className: 'text-gray-600' }, 'Completed: ', report.completedCount || 0, ', Pending: ', report.pendingCount || 0),
                   React.createElement('p', { className: 'text-gray-600' }, 'Time Spent: ', Math.floor(report.timeSpent / 60) || 0, 'm ', report.timeSpent % 60 || 0, 's')
                 )
+              ),
+              // --- Pagination Controls ---
+              totalPages > 1 && React.createElement(
+                'div',
+                { className: 'flex gap-2 mt-4 justify-center' },
+                React.createElement(
+                  'button',
+                  {
+                    className: 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300',
+                    disabled: page === 1,
+                    onClick: () => setPage(page - 1)
+                  },
+                  'Prev'
+                ),
+                Array.from({ length: totalPages }, (_, i) =>
+                  React.createElement(
+                    'button',
+                    {
+                      key: i + 1,
+                      className: `px-3 py-1 rounded ${page === i + 1 ? 'bg-blue-900 text-white' : 'bg-gray-200 hover:bg-gray-300'}`,
+                      onClick: () => setPage(i + 1)
+                    },
+                    i + 1
+                  )
+                ),
+                React.createElement(
+                  'button',
+                  {
+                    className: 'px-3 py-1 rounded bg-gray-200 hover:bg-gray-300',
+                    disabled: page === totalPages,
+                    onClick: () => setPage(page + 1)
+                  },
+                  'Next'
+                )
               )
             )
           : React.createElement('p', { className: 'text-gray-600 mb-6' }, 'No reports available yet. Users need to complete test executions.'),
+        // --- Report Details Modal ---
         selectedReport &&
           React.createElement(
             'div',

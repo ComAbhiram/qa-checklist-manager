@@ -492,7 +492,7 @@
                 onClick: () => setActiveTab('dashboard'),
                 className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'dashboard' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
               },
-              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 2L2 6v12h16V6l-8-4zm0 2.828l5.172 2.586V16H4.828V7.414L10 4.828z' })),
+              React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 2L2 6v12h16V6l-8-4zm0 2.828l5.172 2.586V16H4.828V7.414L10 4.828z' })),
               'Dashboard'
             ),
             React.createElement(
@@ -501,7 +501,7 @@
                 onClick: () => setActiveTab('groups'),
                 className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'groups' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
               },
-              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M4 4h12v12H4V4zm2 2v8h8V6H6z' })),
+              React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M4 4h12v12H4V4zm2 2v8h8V6H6z' })),
               'Manage Groups'
             ),
             React.createElement(
@@ -510,7 +510,7 @@
                 onClick: () => setActiveTab('testcases'),
                 className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'testcases' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
               },
-              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
+              React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
               'Manage Test Cases'
             ),
             React.createElement(
@@ -519,7 +519,7 @@
                 onClick: () => setActiveTab('reports'),
                 className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'reports' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
               },
-              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
+              React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
               'View Reports'
             )
           )
@@ -540,7 +540,7 @@
                 React.createElement(
                   'div',
                   { className: 'w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center' },
-                  React.createElement('svg', { className: 'w-5 h-5 text-gray-600', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 10a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z' }))
+                  React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 10a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z' }))
                 ),
                 React.createElement('span', { className: 'text-gray-700' }, user.role)
               ),
@@ -550,7 +550,7 @@
                   onClick: handleLogout,
                   className: 'text-gray-600 hover:text-gray-800 flex items-center'
                 },
-                React.createElement('svg', { className: 'w-5 h-5 mr-1', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M3 3h14v14H3V3zm10 6h4v2h-4v4l-4-4 4-4v4z' })),
+                React.createElement('svg', { className: 'w-5 h-5 text-black mr-1', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M3 3h14v14H3V3zm10 6h4v2h-4v4l-4-4 4-4v4z' })),
                 'Logout'
               )
             )
@@ -658,6 +658,7 @@
       const [description, setDescription] = useState('');
       const [phase, setPhase] = useState('');
       const [error, setError] = useState('');
+      const [phaseDropdownOpen, setPhaseDropdownOpen] = useState(false);
 
       useEffect(() => {
         const fetchGroups = async () => {
@@ -709,7 +710,7 @@
             onClick: () => setShowPopup(true),
             className: 'bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition mb-6 flex items-center'
           },
-          React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 3v14m-7-7h14' })),
+          React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 3v14m-7-7h14' })),
           'Create Group'
         ),
         groups.length > 0
@@ -740,8 +741,8 @@
                 React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Create New Group'),
                 React.createElement(
                   'button',
-                  { onClick: () => setShowPopup(false), className: 'text-gray-600 hover:text-gray-800' },
-                  React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
+                  { onClick: () => setShowPopup(false), className: 'text-black hover:text-gray-800' },
+                  React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
                 )
               ),
               React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Fill the details to create a new test group.'),
@@ -762,15 +763,34 @@
               }),
               React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Phase'),
               React.createElement(
-                'select',
-                {
-                  value: phase,
-                  onChange: (e) => setPhase(e.target.value),
-                  className: 'w-full p-3 border rounded-lg input-focus mb-4'
-                },
-                React.createElement('option', { value: '' }, 'Select a phase'),
-                PHASES.map(phaseOption =>
-                  React.createElement('option', { key: phaseOption.value, value: phaseOption.value }, phaseOption.label)
+                'div',
+                { className: 'relative mb-4' },
+                React.createElement(
+                  'div',
+                  {
+                    className: 'w-full p-3 border rounded-lg cursor-pointer bg-white',
+                    onClick: () => setPhaseDropdownOpen(v => !v)
+                  },
+                  phase ? phase : 'Select a phase',
+                  React.createElement('span', { className: 'float-right text-black' }, '▼')
+                ),
+                phaseDropdownOpen && React.createElement(
+                  'div',
+                  { className: 'absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-10' },
+                  PHASES.map(option =>
+                    React.createElement(
+                      'div',
+                      {
+                        key: option.value,
+                        className: `px-4 py-2 hover:bg-blue-100 cursor-pointer ${phase === option.value ? 'bg-blue-50 font-semibold' : ''}`,
+                        onClick: () => {
+                          setPhase(option.value);
+                          setPhaseDropdownOpen(false);
+                        }
+                      },
+                      option.label
+                    )
+                  )
                 )
               ),
               React.createElement(
@@ -1123,8 +1143,8 @@
                   React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Report Details'),
                   React.createElement(
                     'button',
-                    { onClick: () => setSelectedReport(null), className: 'text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition' },
-                    React.createElement('svg', { className: 'w-6 h-6', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
+                    { onClick: () => setSelectedReport(null), className: 'text-black hover:text-gray-800 p-2 rounded-full hover:bg-gray-100 transition' },
+                    React.createElement('svg', { className: 'w-6 h-6 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
                   )
                 ),
                 React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', selectedReport.projectName, ', Phase: ', selectedReport.phase),
@@ -1523,6 +1543,9 @@
         setHasSession(!!(session.userName && session.projectName && session.phase));
       }, [showPopup, showReport]);
 
+      // Add state for custom dropdown
+      const [phaseDropdownOpen, setPhaseDropdownOpen] = useState(false);
+
       return React.createElement(
         'div',
         { className: 'flex min-h-screen' },
@@ -1539,7 +1562,7 @@
                 onClick: () => setActiveTab('dashboard'),
                 className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'dashboard' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
               },
-              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 2L2 6v12h16V6l-8-4zm0 2.828l5.172 2.586V16H4.828V7.414L10 4.828z' })),
+              React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 2L2 6v12h16V6l-8-4zm0 2.828l5.172 2.586V16H4.828V7.414L10 4.828z' })),
               'Dashboard'
             ),
             React.createElement(
@@ -1548,7 +1571,7 @@
                 onClick: () => setActiveTab('execution'),
                 className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'execution' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
               },
-              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
+              React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
               'Test Execution'
             )
           )
@@ -1569,7 +1592,7 @@
                 React.createElement(
                   'div',
                   { className: 'w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center' },
-                  React.createElement('svg', { className: 'w-5 h-5 text-gray-600', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 10a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z' }))
+                  React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 10a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6z' }))
                 ),
                 React.createElement('span', { className: 'text-gray-700' }, user.role)
               ),
@@ -1579,7 +1602,7 @@
                   onClick: handleLogout,
                   className: 'text-gray-600 hover:text-gray-800 flex items-center'
                 },
-                React.createElement('svg', { className: 'w-5 h-5 mr-1', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M3 3h14v14H3V3zm10 6h4v2h-4v4l-4-4 4-4v4z' })),
+                React.createElement('svg', { className: 'w-5 h-5 text-black mr-1', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M3 3h14v14H3V3zm10 6h4v2h-4v4l-4-4 4-4v4z' })),
                 'Logout'
               )
             )
@@ -1600,8 +1623,8 @@
                   React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Start New Test Execution'),
                   React.createElement(
                     'button',
-                    { onClick: handlePopupClose, className: 'text-gray-600 hover:text-gray-800' },
-                    React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
+                    { onClick: handlePopupClose, className: 'text-black hover:text-gray-800' },
+                    React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
                   )
                 ),
                 React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'User Name'),
@@ -1621,18 +1644,39 @@
                   className: 'w-full p-3 border rounded-lg input-focus mb-4'
                 }),
                 React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Phase'),
+                // --- Custom dropdown for phase ---
                 React.createElement(
-                  'select',
-                  {
-                    value: phase,
-                    onChange: (e) => setPhase(e.target.value),
-                    className: 'w-full p-3 border rounded-lg input-focus mb-4'
-                  },
-                  React.createElement('option', { value: '' }, 'Select a phase'),
-                  PHASES.map(phaseOption =>
-                    React.createElement('option', { key: phaseOption.value, value: phaseOption.value }, phaseOption.label)
+                  'div',
+                  { className: 'relative mb-4' },
+                  React.createElement(
+                    'div',
+                    {
+                      className: 'w-full p-3 border rounded-lg cursor-pointer bg-white',
+                      onClick: () => setPhaseDropdownOpen(v => !v)
+                    },
+                    phase ? phase : 'Select a phase',
+                    React.createElement('span', { className: 'float-right text-black' }, '▼')
+                  ),
+                  phaseDropdownOpen && React.createElement(
+                    'div',
+                    { className: 'absolute left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg z-10' },
+                    PHASES.map(option =>
+                      React.createElement(
+                        'div',
+                        {
+                          key: option.value,
+                          className: `px-4 py-2 hover:bg-blue-100 cursor-pointer ${phase === option.value ? 'bg-blue-50 font-semibold' : ''}`,
+                          onClick: () => {
+                            setPhase(option.value);
+                            setPhaseDropdownOpen(false);
+                          }
+                        },
+                        option.label
+                      )
+                    )
                   )
                 ),
+                // --- End custom dropdown ---
                 React.createElement(
                   'button',
                   {
@@ -1662,8 +1706,8 @@
                   React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Test Execution Report'),
                   React.createElement(
                     'button',
-                    { onClick: handleCloseReport, className: 'text-gray-600 hover:text-gray-800' },
-                    React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
+                    { onClick: handleCloseReport, className: 'text-black hover:text-gray-800' },
+                    React.createElement('svg', { className: 'w-5 h-5 text-black', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
                   )
                 ),
                 React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', reportData.projectName, ', Phase: ', reportData.phase),

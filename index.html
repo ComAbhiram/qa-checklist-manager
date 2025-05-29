@@ -1168,6 +1168,7 @@
     }
 
     function UserDashboard({ user }) {
+      const [activeTab, setActiveTab] = useState('dashboard');
       const [showPopup, setShowPopup] = useState(true);
       const [showReport, setShowReport] = useState(false);
       const [userName, setUserName] = useState('');
@@ -1182,6 +1183,74 @@
       const [error, setError] = useState('');
       const [reportData, setReportData] = useState(null);
       const chartRef = useRef(null);
+
+      // Dashboard overview state
+      const [userReports, setUserReports] = useState([]);
+      const dashboardChartRef = useRef(null);
+
+      useEffect(() => {
+        // Fetch all reports for this user for dashboard
+        (async () => {
+          const allReports = await storageRequest('Reports');
+          setUserReports((allReports || []).filter(r => r.userName === userName || r.userName === user.email));
+        })();
+      }, [user, userName]);
+
+      useEffect(() => {
+        // Render dashboard bar chart
+        if (activeTab !== 'dashboard') return;
+        if (!userReports.length || !Chart) return;
+        const completed = userReports.reduce((sum, r) => sum + (Number(r.completedCount) || 0), 0);
+        const pending = userReports.reduce((sum, r) => sum + (Number(r.pendingCount) || 0), 0);
+
+        const canvas = document.getElementById('userDashboardBarChart');
+        if (!canvas) return;
+
+        if (dashboardChartRef.current) dashboardChartRef.current.destroy();
+
+        try {
+          dashboardChartRef.current = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: ['Completed', 'Pending'],
+              datasets: [{
+                label: 'Test Cases',
+                data: [completed, pending],
+                backgroundColor: ['#10b981', '#f59e0b']
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                y: { beginAtZero: true }
+              }
+            }
+          });
+        } catch (err) {
+          // ignore chart errors
+        }
+
+        return () => {
+          if (dashboardChartRef.current) {
+            dashboardChartRef.current.destroy();
+            dashboardChartRef.current = null;
+          }
+        };
+      }, [activeTab, userReports]);
+
+      // ...existing code for session, timer, etc...
+
+      // User dashboard summary calculations
+      const totalProjects = userReports.length;
+      const totalCompleted = userReports.reduce((sum, r) => sum + (Number(r.completedCount) || 0), 0);
+      const totalPending = userReports.reduce((sum, r) => sum + (Number(r.pendingCount) || 0), 0);
+      const totalTestCases = totalCompleted + totalPending;
+      const totalTime = userReports.reduce((sum, r) => sum + (Number(r.timeSpent) || 0), 0);
+      const avgTimePerProject = totalProjects > 0 ? Math.round(totalTime / totalProjects) : 0;
+      const completionRate = totalTestCases > 0 ? Math.round((totalCompleted / totalTestCases) * 100) : 0;
 
       useEffect(() => {
         const loadSession = async () => {
@@ -1446,6 +1515,14 @@
         window.location.reload();
       };
 
+      // Track if a session is in progress
+      const [hasSession, setHasSession] = useState(false);
+
+      useEffect(() => {
+        const session = JSON.parse(localStorage.getItem('userSession') || '{}');
+        setHasSession(!!(session.userName && session.projectName && session.phase));
+      }, [showPopup, showReport]);
+
       return React.createElement(
         'div',
         { className: 'flex min-h-screen' },
@@ -1458,7 +1535,19 @@
             null,
             React.createElement(
               'button',
-              { className: 'w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center bg-gray-100 text-gray-800' },
+              {
+                onClick: () => setActiveTab('dashboard'),
+                className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'dashboard' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
+              },
+              React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M10 2L2 6v12h16V6l-8-4zm0 2.828l5.172 2.586V16H4.828V7.414L10 4.828z' })),
+              'Dashboard'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => setActiveTab('execution'),
+                className: `w-full text-left px-4 py-3 rounded-lg sidebar-item mb-2 flex items-center ${activeTab === 'execution' ? 'bg-gray-100 text-gray-800' : 'text-gray-600'}`
+              },
               React.createElement('svg', { className: 'w-5 h-5 mr-2', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M2 3h16v14H2V3zm4 8h2v4H6v-4zm4-4h2v8h-2V7zm4 2h2v6h-2V9z' })),
               'Test Execution'
             )
@@ -1495,206 +1584,301 @@
               )
             )
           ),
-          React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'User Dashboard'),
-          error && React.createElement('p', { className: 'text-red-500 mb-4' }, error),
-          showPopup
-            ? React.createElement(
+          // --- Always render the popup if showPopup is true ---
+          showPopup && React.createElement(
+            'div',
+            { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50' },
+            React.createElement(
+              'div',
+              { className: 'bg-white p-6 rounded-lg custom-shadow w-96' },
+              React.createElement(
                 'div',
-                { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50' },
+                { className: 'modal-scroll' },
                 React.createElement(
                   'div',
-                  { className: 'bg-white p-6 rounded-lg custom-shadow w-96' },
+                  { className: 'flex justify-between items-center mb-4' },
+                  React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Start New Test Execution'),
                   React.createElement(
-                    'div',
-                    { className: 'modal-scroll' },
-                    React.createElement(
-                      'div',
-                      { className: 'flex justify-between items-center mb-4' },
-                      React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Start New Test Execution'),
-                      React.createElement(
-                        'button',
-                        { onClick: handlePopupClose, className: 'text-gray-600 hover:text-gray-800' },
-                        React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
-                      )
-                    ),
-                    React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'User Name'),
-                    React.createElement('input', {
-                      type: 'text',
-                      placeholder: 'Enter your name',
-                      value: userName,
-                      onChange: (e) => setUserName(e.target.value),
-                      className: 'w-full p-3 border rounded-lg input-focus mb-4'
-                    }),
-                    React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Project Name'),
-                    React.createElement('input', {
-                      type: 'text',
-                      placeholder: 'Enter project name',
-                      value: projectName,
-                      onChange: (e) => setProjectName(e.target.value),
-                      className: 'w-full p-3 border rounded-lg input-focus mb-4'
-                    }),
-                    React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Phase'),
-                    React.createElement(
-                      'select',
-                      {
-                        value: phase,
-                        onChange: (e) => setPhase(e.target.value),
-                        className: 'w-full p-3 border rounded-lg input-focus mb-4'
-                      },
-                      React.createElement('option', { value: '' }, 'Select a phase'),
-                      PHASES.map(phaseOption =>
-                        React.createElement('option', { key: phaseOption.value, value: phaseOption.value }, phaseOption.label)
-                      )
-                    ),
-                    React.createElement(
-                      'button',
-                      {
-                        onClick: handlePopupSubmit,
-                        className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition'
-                      },
-                      'Start Execution'
-                    )
+                    'button',
+                    { onClick: handlePopupClose, className: 'text-gray-600 hover:text-gray-800' },
+                    React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
                   )
+                ),
+                React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'User Name'),
+                React.createElement('input', {
+                  type: 'text',
+                  placeholder: 'Enter your name',
+                  value: userName,
+                  onChange: (e) => setUserName(e.target.value),
+                  className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                }),
+                React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Project Name'),
+                React.createElement('input', {
+                  type: 'text',
+                  placeholder: 'Enter project name',
+                  value: projectName,
+                  onChange: (e) => setProjectName(e.target.value),
+                  className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                }),
+                React.createElement('label', { className: 'block text-sm text-gray-600 mb-2' }, 'Phase'),
+                React.createElement(
+                  'select',
+                  {
+                    value: phase,
+                    onChange: (e) => setPhase(e.target.value),
+                    className: 'w-full p-3 border rounded-lg input-focus mb-4'
+                  },
+                  React.createElement('option', { value: '' }, 'Select a phase'),
+                  PHASES.map(phaseOption =>
+                    React.createElement('option', { key: phaseOption.value, value: phaseOption.value }, phaseOption.label)
+                  )
+                ),
+                React.createElement(
+                  'button',
+                  {
+                    onClick: handlePopupSubmit,
+                    className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition'
+                  },
+                  'Start Execution'
                 )
               )
-            : showReport && reportData
-              ? React.createElement(
+            )
+          ),
+          // --- End popup always rendered ---
+
+          // --- Show project summary and graph after project ends ---
+          showReport && reportData && React.createElement(
+            'div',
+            { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50' },
+            React.createElement(
+              'div',
+              { className: 'bg-white p-6 rounded-lg custom-shadow w-full max-w-lg' },
+              React.createElement(
+                'div',
+                { className: 'modal-scroll' },
+                React.createElement(
                   'div',
-                  { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50' },
+                  { className: 'flex justify-between items-center mb-4' },
+                  React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Test Execution Report'),
                   React.createElement(
-                    'div',
-                    { className: 'bg-white p-6 rounded-lg custom-shadow w-full max-w-lg' },
-                    React.createElement(
-                      'div',
-                      { className: 'modal-scroll' },
+                    'button',
+                    { onClick: handleCloseReport, className: 'text-gray-600 hover:text-gray-800' },
+                    React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
+                  )
+                ),
+                React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', reportData.projectName, ', Phase: ', reportData.phase),
+                React.createElement(
+                  'div',
+                  { className: 'chart-container mb-6' },
+                  React.createElement('canvas', { id: 'userReportChart' })
+                ),
+                React.createElement(
+                  'div',
+                  { className: 'space-y-2' },
+                  React.createElement('p', { className: 'text-gray-600' }, 'Total Test Cases: ', React.createElement('span', { className: 'font-semibold' }, reportData.completedCount + reportData.pendingCount)),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Completed: ', React.createElement('span', { className: 'font-semibold text-green-600' }, reportData.completedCount)),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Pending: ', React.createElement('span', { className: 'font-semibold text-yellow-600' }, reportData.pendingCount)),
+                  React.createElement('p', { className: 'text-gray-600' }, 'Time Spent: ', React.createElement('span', { className: 'font-semibold' }, Math.floor(reportData.timeSpent / 60), 'm ', reportData.timeSpent % 60, 's'))
+                ),
+                React.createElement(
+                  'button',
+                  {
+                    onClick: handleCloseReport,
+                    className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition mt-4'
+                  },
+                  'Start New Project'
+                )
+              )
+            )
+          ),
+          // --- End project summary and graph ---
+
+          activeTab === 'dashboard' && React.createElement(
+            'div',
+            null,
+            React.createElement('h2', { className: 'text-xl font-bold mb-4 text-gray-800' }, 'User Dashboard Overview'),
+            React.createElement(
+              'div',
+              { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 mb-6' },
+              React.createElement(
+                'div',
+                { className: 'bg-white p-6 rounded-lg custom-shadow' },
+                React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-2' }, 'Projects Completed'),
+                React.createElement('p', { className: 'text-3xl font-bold text-gray-800' }, totalProjects)
+              ),
+              React.createElement(
+                'div',
+                { className: 'bg-white p-6 rounded-lg custom-shadow' },
+                React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-2' }, 'Avg Time per Project'),
+                React.createElement('p', { className: 'text-3xl font-bold text-gray-800' }, isNaN(avgTimePerProject) ? 'N/A' : `${Math.floor(avgTimePerProject / 60)}m ${avgTimePerProject % 60}s`)
+              ),
+              React.createElement(
+                'div',
+                { className: 'bg-white p-6 rounded-lg custom-shadow' },
+                React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-2' }, 'Completion Rate'),
+                React.createElement('p', { className: 'text-3xl font-bold text-gray-800' }, `${completionRate}%`)
+              )
+            ),
+            React.createElement(
+              'div',
+              { className: 'bg-white p-6 rounded-lg custom-shadow mb-6' },
+              React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Completed vs Pending Test Cases'),
+              React.createElement('canvas', { id: 'userDashboardBarChart', width: 400, height: 200 })
+            ),
+            // --- Resume Project Button ---
+            hasSession && React.createElement(
+              'div',
+              { className: 'flex justify-end mb-4' },
+              React.createElement(
+                'button',
+                {
+                  className: 'bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition',
+                  onClick: () => {
+                    setShowPopup(false);
+                    setActiveTab('execution');
+                  }
+                },
+                'Resume Project'
+              )
+            ),
+            // --- Start New Project Button ---
+            React.createElement(
+              'div',
+              { className: 'flex justify-end mb-4' },
+              React.createElement(
+                'button',
+                {
+                  className: 'bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition',
+                  onClick: () => setShowPopup(true)
+                },
+                'Start a new project'
+              )
+            ),
+            // --- Previous Reports Section ---
+            React.createElement(
+              'div',
+              { className: 'bg-white p-6 rounded-lg custom-shadow' },
+              React.createElement('h3', { className: 'text-lg font-semibold text-gray-800 mb-4' }, 'Previous Reports'),
+              userReports && userReports.length > 0
+                ? React.createElement(
+                    'ul',
+                    { className: 'divide-y' },
+                    userReports.slice().reverse().map((r, idx) =>
                       React.createElement(
-                        'div',
-                        { className: 'flex justify-between items-center mb-4' },
-                        React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Test Execution Report'),
-                        React.createElement(
-                          'button',
-                          { onClick: handleCloseReport, className: 'text-gray-600 hover:text-gray-800' },
-                          React.createElement('svg', { className: 'w-5 h-5', fill: 'currentColor', viewBox: '0 0 20 20' }, React.createElement('path', { d: 'M6 6l8 8m0-8l-8 8' }))
-                        )
-                      ),
-                      React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', reportData.projectName, ', Phase: ', reportData.phase),
-                      React.createElement(
-                        'div',
-                        { className: 'chart-container mb-6' },
-                        React.createElement('canvas', { id: 'userReportChart' })
-                      ),
-                      React.createElement(
-                        'div',
-                        { className: 'space-y-2' },
-                        React.createElement('p', { className: 'text-gray-600' }, 'Total Test Cases: ', React.createElement('span', { className: 'font-semibold' }, reportData.completedCount + reportData.pendingCount)),
-                        React.createElement('p', { className: 'text-gray-600' }, 'Completed: ', React.createElement('span', { className: 'font-semibold text-green-600' }, reportData.completedCount)),
-                        React.createElement('p', { className: 'text-gray-600' }, 'Pending: ', React.createElement('span', { className: 'font-semibold text-yellow-600' }, reportData.pendingCount)),
-                        React.createElement('p', { className: 'text-gray-600' }, 'Time Spent: ', React.createElement('span', { className: 'font-semibold' }, Math.floor(reportData.timeSpent / 60), 'm ', reportData.timeSpent % 60, 's'))
-                      ),
-                      React.createElement(
-                        'button',
-                        {
-                          onClick: handleCloseReport,
-                          className: 'w-full bg-blue-900 text-white p-3 rounded-lg hover:bg-blue-800 transition mt-4'
-                        },
-                        'Start New Project'
+                        'li',
+                        { key: r.id, className: 'py-3' },
+                        React.createElement('span', { className: 'font-semibold text-gray-800' }, r.projectName),
+                        ' (', r.phase, ') - ',
+                        React.createElement('span', { className: 'text-green-600' }, 'Completed: ', r.completedCount),
+                        ', ',
+                        React.createElement('span', { className: 'text-yellow-600' }, 'Pending: ', r.pendingCount),
+                        ', ',
+                        React.createElement('span', { className: 'text-gray-600' }, 'Time: ', Math.floor(r.timeSpent / 60), 'm ', r.timeSpent % 60, 's')
                       )
                     )
                   )
-                )
-              : [
-                  React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', projectName, ', Phase: ', phase),
-                  groups.length > 0
-                    ? !selectedGroup
-                        ? React.createElement(
+                : React.createElement('p', { className: 'text-gray-600' }, 'No previous reports.')
+            )
+          ),
+          activeTab === 'execution' && (
+            // ...existing Test Execution UI...
+            // (all code previously in UserDashboard except sidebar and header)
+            // You can keep your previous execution UI code here.
+            // ...existing code...
+            [
+              React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Project: ', projectName, ', Phase: ', phase),
+              groups.length > 0
+                ? !selectedGroup
+                    ? React.createElement(
+                        'div',
+                        { className: 'space-y-4' },
+                        React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Select a Test Group'),
+                        groups.map(group =>
+                          React.createElement(
                             'div',
-                            { className: 'space-y-4' },
-                            React.createElement('h3', { className: 'text-lg font-semibold text-gray-800' }, 'Select a Test Group'),
-                            groups.map(group =>
-                              React.createElement(
-                                'div',
-                                { key: group.id, className: 'bg-white p-4 rounded-lg custom-shadow card-hover' },
-                                React.createElement('h4', { className: 'font-semibold text-gray-800' }, group.name),
-                                React.createElement('p', { className: 'text-gray-600' }, 'Description: ', group.description || 'None'),
-                                React.createElement('p', { className: 'text-gray-600' }, 'Phase: ', group.phase),
-                                React.createElement(
-                                  'button',
-                                  {
-                                    onClick: () => handleGroupSelect(group.id),
-                                    className: 'mt-2 bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800'
-                                  },
-                                  'Select Group'
-                                )
-                              )
-                            )
-                          )
-                        : React.createElement(
-                            'div',
-                            null,
+                            { key: group.id, className: 'bg-white p-4 rounded-lg custom-shadow card-hover' },
+                            React.createElement('h4', { className: 'font-semibold text-gray-800' }, group.name),
+                            React.createElement('p', { className: 'text-gray-600' }, 'Description: ', group.description || 'None'),
+                            React.createElement('p', { className: 'text-gray-600' }, 'Phase: ', group.phase),
                             React.createElement(
                               'button',
                               {
-                                onClick: handleBackToGroups,
-                                className: 'bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 mb-4'
+                                onClick: () => handleGroupSelect(group.id),
+                                className: 'mt-2 bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800'
                               },
-                              'Back to Groups'
-                            ),
-                            React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Timer: ', Math.floor(timer / 60), 'm ', timer % 60, 's'),
-                            !isRunning &&
-                              React.createElement(
-                                'button',
-                                {
-                                  onClick: handleStartProject,
-                                  className: 'bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 mb-4'
-                                },
-                                'Start Timer'
-                              ),
-                            isRunning &&
-                              React.createElement(
-                                'button',
-                                {
-                                  onClick: handleEndProject,
-                                  className: 'bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 mb-4'
-                                },
-                                'End Execution'
-                              ),
-                            testCases.length > 0
-                              ? React.createElement(
+                              'Select Group'
+                            )
+                          )
+                        )
+                      )
+                    : React.createElement(
+                        'div',
+                        null,
+                        React.createElement(
+                          'button',
+                          {
+                            onClick: handleBackToGroups,
+                            className: 'bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 mb-4'
+                          },
+                          'Back to Groups'
+                        ),
+                        React.createElement('p', { className: 'text-gray-600 mb-4' }, 'Timer: ', Math.floor(timer / 60), 'm ', timer % 60, 's'),
+                        !isRunning &&
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: handleStartProject,
+                              className: 'bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 mb-4'
+                            },
+                            'Start Timer'
+                          ),
+                        isRunning &&
+                          React.createElement(
+                            'button',
+                            {
+                              onClick: handleEndProject,
+                              className: 'bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 mb-4'
+                            },
+                            'End Execution'
+                          ),
+                        testCases.length > 0
+                          ? React.createElement(
+                              'div',
+                              { className: 'space-y-4' },
+                              testCases.map((tc, idx) =>
+                                React.createElement(
                                   'div',
-                                  { className: 'space-y-4' },
-                                  testCases.map((tc, idx) =>
+                                  { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
+                                  React.createElement(
+                                    'div',
+                                    { className: 'flex items-start' },
+                                    React.createElement('input', {
+                                      type: 'checkbox',
+                                      checked: completed[idx] || false,
+                                      onChange: () => handleCheckboxChange(idx),
+                                      className: 'mr-3 mt-1'
+                                    }),
                                     React.createElement(
                                       'div',
-                                      { key: tc.id, className: 'bg-white p-6 rounded-lg custom-shadow card-hover' },
+                                      null,
+                                      React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
                                       React.createElement(
-                                        'div',
-                                        { className: 'flex items-start' },
-                                        React.createElement('input', {
-                                          type: 'checkbox',
-                                          checked: completed[idx] || false,
-                                          onChange: () => handleCheckboxChange(idx),
-                                          className: 'mr-3 mt-1'
-                                        }),
-                                        React.createElement(
-                                          'div',
-                                          null,
-                                          React.createElement('h3', { className: 'font-semibold text-gray-800' }, tc.title),
-                                          React.createElement(
-                                            'ul',
-                                            { className: 'ml-4 list-disc text-gray-700' },
-                                            tc.steps.split('\n').map((step, stepIdx) =>
-                                              React.createElement('li', { key: stepIdx }, step)
-                                            )
-                                          )
+                                        'ul',
+                                        { className: 'ml-4 list-disc text-gray-700' },
+                                        tc.steps.split('\n').map((step, stepIdx) =>
+                                          React.createElement('li', { key: stepIdx }, step)
                                         )
                                       )
                                     )
                                   )
                                 )
-                              : React.createElement('p', { className: 'text-gray-600' }, 'No test cases available for this group.')
-                          )
-                    : React.createElement('p', { className: 'text-gray-600' }, 'No test groups available for this phase. Contact your admin to create groups.')
-                ]
+                              )
+                            )
+                          : React.createElement('p', { className: 'text-gray-600' }, 'No test cases available for this group.')
+                      )
+                : React.createElement('p', { className: 'text-gray-600' }, 'No test groups available for this phase. Contact your admin to create groups.')
+            ]
+          )
         )
       );
     }
